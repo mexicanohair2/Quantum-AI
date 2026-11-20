@@ -1,43 +1,269 @@
 <!doctype html>
 <html lang="ru">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#120d16">
-<meta name="description" content="Quantum-AI — исследовательский проект собственной языковой модели. Архитектура, модули и статус разработки.">
-<title>Quantum-AI — собственная языковая модель</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#100b12">
+<meta name="description" content="Quantum-AI — чат с DeepSeek V4.1 Flash.">
+<title>Quantum-AI — DeepSeek</title>
 <style>
-:root{color-scheme:dark;--bg:#100c13;--panel:#1a121e;--line:#39263d;--text:#f1eaf2;--muted:#b7a8ba;--warn:#e0b77c}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse at 82% 0%,#39203a 0,transparent 36%),radial-gradient(ellipse at 0% 30%,#351a2b 0,transparent 30%),var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,Segoe UI,sans-serif}
-a{color:#e6a9c0;text-decoration:none}a:hover{text-decoration:underline}.wrap{width:min(1100px,calc(100% - 36px));margin:auto}
-header{padding:22px 0;border-bottom:1px solid #ffffff12;position:sticky;top:0;background:#100c13e8;backdrop-filter:blur(16px);z-index:5}.nav{display:flex;align-items:center;justify-content:space-between;gap:16px}.brand{font-weight:750;letter-spacing:.04em}.brand span{color:#d68da7}.navlinks{display:flex;gap:20px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
-.hero{padding:92px 0 70px}.eyebrow{color:#d49ab0;text-transform:uppercase;letter-spacing:.18em;font-size:12px;font-weight:700}.hero h1{font-size:clamp(42px,8vw,78px);line-height:1.04;letter-spacing:-.055em;margin:18px 0}.hero h1 em{font-style:normal;background:linear-gradient(100deg,#f0c3d1,#aa8ac8);-webkit-background-clip:text;background-clip:text;color:transparent}.lead{max-width:720px;color:#c7b9c9;font-size:19px}.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}.btn{display:inline-flex;padding:12px 18px;border-radius:13px;border:1px solid #70445f;background:linear-gradient(120deg,#613247,#382443);color:#fff;font-weight:650}.btn.secondary{background:#1c1520;border-color:#49364d;color:#e9dce9}
-section{padding:52px 0}h2{font-size:clamp(27px,4vw,38px);line-height:1.2;letter-spacing:-.03em;margin:0 0 14px}.sub{color:var(--muted);max-width:720px;margin:0 0 28px}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{background:linear-gradient(145deg,#211725,#17121a);border:1px solid var(--line);border-radius:18px;padding:22px;min-width:0}.card h3{margin:0 0 8px;font-size:18px}.card p{margin:0;color:var(--muted);font-size:14px}.tag{display:inline-block;color:#e3a8bf;background:#47273a;border:1px solid #6a3b55;border-radius:7px;padding:2px 8px;font-size:11px;margin-bottom:12px}
-.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.node{padding:16px;border:1px solid #49344e;border-radius:14px;background:#1c1521;text-align:center}.node b{display:block;color:#e8c4d3}.node small{display:block;color:var(--muted);margin-top:5px}
-.note{border:1px solid #70543a;background:#251d19;border-radius:16px;padding:18px 20px;color:#dfc9aa}.note strong{color:#f0d8b5}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.stat{padding:20px;border-radius:16px;background:#1b1420;border:1px solid var(--line)}.stat strong{display:block;font-size:26px;color:#e7b4c6}.stat span{font-size:13px;color:var(--muted)}
-footer{border-top:1px solid #ffffff14;padding:28px 0 40px;color:var(--muted);font-size:13px}
-@media(max-width:760px){.grid{grid-template-columns:repeat(2,1fr)}.flow{grid-template-columns:repeat(2,1fr)}.hero{padding:66px 0 48px}.navlinks{gap:12px}}
-@media(max-width:480px){.grid,.stats{grid-template-columns:1fr}.nav{align-items:flex-start;flex-direction:column}.navlinks{font-size:13px}.hero h1{font-size:48px}}
+:root{color-scheme:dark;--bg:#100b12;--panel:#19121c;--panel2:#211725;--line:#38283b;--text:#f3edf4;--muted:#a99aaa;--accent:#c58aa8;--accent2:#9274b1;--user:#392433;--assistant:#201925}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:radial-gradient(ellipse at 50% -12%,#46273f 0,transparent 42%),var(--bg);color:var(--text);font:15px/1.55 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+button,textarea{font:inherit}
+button{cursor:pointer}
+.app{height:100%;min-height:0;display:flex;flex-direction:column;max-width:1000px;margin:0 auto;padding:0 18px}
+header{height:70px;flex:none;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #ffffff12}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:39px;height:39px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(145deg,#8c4c6b,#46304f);box-shadow:inset 0 1px 0 #ffffff35,0 6px 22px #0005;font-size:17px;font-weight:800;letter-spacing:-1px}
+.brand-name{font-size:17px;font-weight:750;letter-spacing:.02em}
+.brand-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.header-right{display:flex;align-items:center;gap:14px}
+.status{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px}
+.dot{width:7px;height:7px;border-radius:50%;background:#8a7c8c;box-shadow:0 0 0 3px #8a7c8c20}
+.status.online .dot{background:#79b89b;box-shadow:0 0 0 3px #79b89b20}
+.status.offline .dot{background:#cb8a82;box-shadow:0 0 0 3px #cb8a8220}
+.icon-btn{width:38px;height:38px;border:1px solid var(--line);border-radius:12px;background:#211825;color:#c9bacb;display:grid;place-items:center}
+.icon-btn:active{transform:scale(.97)}
+main{flex:1;min-height:0;display:flex;flex-direction:column}
+.chat{flex:1;min-height:0;overflow-y:auto;padding:28px 4px 20px;scroll-behavior:smooth}
+.welcome{max-width:650px;margin:8vh auto 0;text-align:center}
+.orb{width:72px;height:72px;border-radius:24px;margin:0 auto 22px;display:grid;place-items:center;background:linear-gradient(145deg,#6b3d59,#35233f);border:1px solid #a46e8b66;box-shadow:0 15px 55px #0006,inset 0 1px 0 #ffffff35;font-size:29px;font-weight:800;letter-spacing:-2px}
+.welcome h1{font-size:clamp(27px,5vw,38px);letter-spacing:-.04em;margin:0 0 10px}
+.welcome p{color:var(--muted);max-width:480px;margin:0 auto 24px}
+.model-pill{display:inline-flex;align-items:center;gap:8px;border:1px solid #594052;background:#241925;color:#d7b5c6;border-radius:99px;padding:6px 12px;font-size:12px}
+.model-pill i{width:6px;height:6px;border-radius:50%;background:#c58aa8}
+.suggestions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-width:570px;margin:28px auto 0;text-align:left}
+.suggestion{border:1px solid var(--line);border-radius:14px;padding:13px 15px;background:#1b141e;color:#d9cedb;text-align:left;font-size:13px;transition:.18s}
+.suggestion:hover{border-color:#76516b;background:#251a27}
+.messages{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+.message{display:flex;gap:11px;align-items:flex-start;max-width:100%}
+.message.user{flex-direction:row-reverse}
+.avatar{width:31px;height:31px;flex:none;border-radius:11px;display:grid;place-items:center;background:linear-gradient(145deg,#75445f,#3e2a4b);font-size:11px;font-weight:800;color:#fff}
+.message.user .avatar{background:#4a3043}
+.bubble{max-width:min(84%,680px);padding:12px 15px;border:1px solid var(--line);border-radius:4px 16px 16px 16px;background:var(--assistant);color:#eee6ef;white-space:pre-wrap;overflow-wrap:anywhere}
+.message.user .bubble{border-radius:16px 4px 16px 16px;background:var(--user);border-color:#604054}
+.typing{display:flex;gap:5px;align-items:center;padding:8px 2px}
+.typing span{width:6px;height:6px;border-radius:50%;background:#c58aa8;animation:pulse 1s infinite ease-in-out}
+.typing span:nth-child(2){animation-delay:.15s}.typing span:nth-child(3){animation-delay:.3s}
+@keyframes pulse{0%,60%,100%{opacity:.35;transform:translateY(0)}30%{opacity:1;transform:translateY(-4px)}}
+.composer-wrap{flex:none;padding:12px 0 max(18px,env(safe-area-inset-bottom))}
+.composer{max-width:760px;margin:0 auto;border:1px solid #4a354b;background:#1c1520;border-radius:19px;padding:9px 10px 9px 16px;box-shadow:0 12px 36px #0004}
+.composer:focus-within{border-color:#91627e;box-shadow:0 0 0 3px #bd84a51a,0 12px 36px #0004}
+textarea{display:block;width:100%;resize:none;max-height:150px;min-height:42px;padding:9px 4px;border:0;outline:0;background:transparent;color:var(--text);line-height:1.5}
+textarea::placeholder{color:#827486}
+.composer-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:5px}
+.hint{font-size:11px;color:#8f8092}
+.send{width:39px;height:39px;border:0;border-radius:13px;background:linear-gradient(145deg,#a76583,#684b7f);color:white;display:grid;place-items:center;box-shadow:0 5px 16px #0005}
+.send:disabled{opacity:.4;cursor:not-allowed}
+.send svg{width:18px;height:18px}
+.security{max-width:760px;margin:9px auto 0;display:flex;justify-content:center;min-height:0}
+#turnstile{min-height:0;transform:scale(.82);transform-origin:top center}
+.disclaimer{text-align:center;color:#766a7b;font-size:10px;margin-top:7px}
+.error{max-width:760px;margin:0 auto 10px;color:#e3aaa2;font-size:12px;text-align:center}
+@media(max-width:600px){.app{padding:0 12px}header{height:62px}.brand-name{font-size:16px}.status{font-size:11px}.welcome{margin-top:6vh}.suggestions{grid-template-columns:1fr}.chat{padding-top:18px}.bubble{max-width:88%;font-size:14px}.composer{border-radius:17px}.hint{font-size:10px}}
 </style>
+<script>
+window.onTurnstileLoad = function () {
+  const el = document.getElementById("turnstile");
+  if (!el || !window.turnstile) return;
+  window.quantumTurnstileId = turnstile.render(el, {
+    sitekey: "0x4AAAAAAGK1SlO1zbyfbUBP",
+    callback: token => { window.quantumTurnstileToken = token; },
+    "expired-callback": () => { window.quantumTurnstileToken = ""; },
+    "error-callback": () => { window.quantumTurnstileToken = ""; }
+  });
+};
+</script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad&render=explicit" async defer></script>
 </head>
 <body>
-<header><div class="wrap nav"><a class="brand" href="#">QUANTUM<span>·</span>AI</a><nav class="navlinks"><a href="#architecture">Архитектура</a><a href="#modules">Модули</a><a href="#status">Статус</a><a href="https://github.com/mexicanohair2/Quantum-AI">GitHub</a></nav></div></header>
+<div class="app">
+<header>
+  <div class="brand">
+    <div class="logo">Q</div>
+    <div><div class="brand-name">Quantum-AI</div><div class="brand-sub">Интеллектуальный помощник</div></div>
+  </div>
+  <div class="header-right">
+    <div class="status" id="status"><span class="dot"></span><span id="statusText">Подключение…</span></div>
+    <button class="icon-btn" id="clearBtn" title="Очистить диалог" aria-label="Очистить диалог">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m4 4v6m6-6v6"/></svg>
+    </button>
+  </div>
+</header>
 <main>
-<div class="wrap hero"><div class="eyebrow">Independent model research</div><h1>Quantum<em>-AI</em></h1><p class="lead">Исследовательский проект собственной языковой модели: от токенизатора и Transformer-ядра до памяти, reasoning, поиска и мультимодальности.</p><div class="actions"><a class="btn" href="https://github.com/mexicanohair2/Quantum-AI">Открыть репозиторий ↗</a><a class="btn secondary" href="docs/DEEPSEEK_TRANSFER.md">Технические материалы</a></div></div>
-<section id="architecture"><div class="wrap"><h2>Архитектура системы</h2><p class="sub">Модульная структура, описанная в материалах проекта. Схема отражает целевое разделение компонентов, а не подтверждение готовой реализации.</p><div class="flow"><div class="node"><b>Tokenizer</b><small>Byte-level BPE</small></div><div class="node"><b>Quantum Core</b><small>Transformer · GQA</small></div><div class="node"><b>Generation</b><small>Sampling · streaming</small></div><div class="node"><b>Response</b><small>UTF-8 output</small></div></div></div></section>
-<section id="modules"><div class="wrap"><h2>Основные направления</h2><p class="sub">Сведения, восстановленные из обсуждений материалов DeepSeek.</p><div class="grid">
-<article class="card"><span class="tag">CORE</span><h3>Языковое ядро</h3><p>PyTorch Transformer, RMSNorm, Grouped-Query Attention, SwiGLU и causal attention.</p></article>
-<article class="card"><span class="tag">TEXT</span><h3>Токенизатор</h3><p>Byte-level BPE с диапазоном специальных, байтовых и объединённых токенов.</p></article>
-<article class="card"><span class="tag">INFERENCE</span><h3>Генерация</h3><p>Top-k / top-p, repetition penalty, потоковая выдача и сборка UTF-8.</p></article>
-<article class="card"><span class="tag">TRAINING</span><h3>Обучение</h3><p>Train loop, scheduler, сохранение checkpoint и возобновление обучения.</p></article>
-<article class="card"><span class="tag">MEMORY</span><h3>Память</h3><p>SQLite-хранилище, разделение пользовательских данных и embeddings.</p></article>
-<article class="card"><span class="tag">REASONING</span><h3>Рассуждения</h3><p>AST-парсер с белым списком разрешённых операций и математических функций.</p></article>
-<article class="card"><span class="tag">SEARCH</span><h3>Веб-поиск</h3><p>Поиск страниц и проверки адресов/IP для защиты от SSRF и небезопасных редиректов.</p></article>
-<article class="card"><span class="tag">VISION</span><h3>Компьютерное зрение</h3><p>CNN-признаки, spatial tokens, projection и cross-attention.</p></article>
-<article class="card"><span class="tag">QUALITY</span><h3>Тестирование</h3><p>Тесты токенизатора, модели, памяти, поиска, обучения и интеграции.</p></article>
-</div></div></section>
-<section><div class="wrap"><h2>Принципы разработки</h2><div class="grid"><div class="card"><h3>Проверяемость</h3><p>Результаты тестов и обучения публикуются только при наличии воспроизводимых запусков и логов.</p></div><div class="card"><h3>Без подмены ядра</h3><p>Инструменты, поиск и память расширяют систему, но не выдаются за собственную языковую модель.</p></div><div class="card"><h3>Прозрачность</h3><p>Происхождение весов, данных, библиотек и внешних сервисов должно быть явно обозначено.</p></div></div></div></section>
-<section id="status"><div class="wrap"><h2>Текущий статус</h2><p class="sub">Сайт и документация публикуются в репозитории. Техническая реализация модели требует отдельной проверки исходников.</p><div class="stats"><div class="stat"><strong>Docs</strong><span>Сводка материалов добавлена</span></div><div class="stat"><strong>Web</strong><span>Статический сайт проекта</span></div><div class="stat"><strong>Model</strong><span>Исходники и inference не подтверждены</span></div></div><div class="note" style="margin-top:18px"><strong>Важно.</strong> В доступной истории обнаружены описания модулей и отдельные технические контрольные значения, но не полные исходные листинги DeepSeek. Поэтому этот сайт — информационная страница проекта, а не работающий чат с моделью. Полный перенос кода нельзя честно отметить как завершённый до восстановления оригинальных файлов.</div><p style="margin-top:20px"><a href="docs/DEEPSEEK_TRANSFER.md">Открыть полный отчёт о переносе →</a></p></div></section>
-</main><footer><div class="wrap">Quantum-AI · Research project · <a href="https://github.com/mexicanohair2/Quantum-AI">GitHub repository</a></div></footer>
-</body></html>
+  <section class="chat" id="chat" aria-live="polite">
+    <div class="welcome" id="welcome">
+      <div class="orb">Q</div>
+      <h1>Чем займёмся?</h1>
+      <p>Задавай вопросы, разбирай сложные темы, придумывай идеи или работай над проектами. Я готов помочь.</p>
+      <div class="model-pill"><i></i> DeepSeek V4.1 Flash</div>
+      <div class="suggestions">
+        <button class="suggestion">Объясни сложную тему простыми словами</button>
+        <button class="suggestion">Помоги придумать и спланировать проект</button>
+        <button class="suggestion">Напиши и проверь код</button>
+        <button class="suggestion">Разбери задачу по шагам</button>
+      </div>
+    </div>
+    <div class="messages" id="messages"></div>
+  </section>
+  <div class="error" id="error" role="status"></div>
+  <div class="composer-wrap">
+    <div class="composer">
+      <textarea id="prompt" rows="1" maxlength="4000" placeholder="Напиши сообщение…" aria-label="Сообщение"></textarea>
+      <div class="composer-bottom">
+        <span class="hint">Enter — отправить · Shift + Enter — новая строка</span>
+        <button class="send" id="sendBtn" aria-label="Отправить" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 14-7-5 14-2-6-7-1Z"/><path d="m12 13 7-8"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="security"><div id="turnstile"></div></div>
+    <div class="disclaimer">Ответы генерирует DeepSeek V4.1 Flash через Cloudflare Workers AI.</div>
+  </div>
+</main>
+</div>
+<script>
+(() => {
+  const API = "https://quantum-ai-api.qq-ai-cloud.workers.dev";
+  const STORAGE = "quantum-ai-chat-v1";
+  const SYSTEM = "Ты — Quantum-AI, русскоязычный интеллектуальный помощник. Твой языковой движок — DeepSeek V4.1 Flash. Отвечай точно, спокойно и по существу. Если не уверен — прямо обозначай неопределённость. Не выдумывай выполненные действия, источники или результаты проверок. Для кода сохраняй существующий функционал и объясняй важные ограничения.";
+  const chat = document.getElementById("chat");
+  const messagesEl = document.getElementById("messages");
+  const welcome = document.getElementById("welcome");
+  const input = document.getElementById("prompt");
+  const sendBtn = document.getElementById("sendBtn");
+  const errorEl = document.getElementById("error");
+  const statusEl = document.getElementById("status");
+  const statusText = document.getElementById("statusText");
+  let messages = [];
+  let busy = false;
+
+  function persist() {
+    try { localStorage.setItem(STORAGE, JSON.stringify(messages.slice(-40))); } catch {}
+  }
+  function scrollBottom() { chat.scrollTop = chat.scrollHeight; }
+  function addMessage(role, content) {
+    const row = document.createElement("div");
+    row.className = "message " + role;
+    const avatar = document.createElement("div");
+    avatar.className = "avatar";
+    avatar.textContent = role === "user" ? "Я" : "Q";
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.textContent = content;
+    row.append(avatar, bubble);
+    messagesEl.appendChild(row);
+    welcome.style.display = "none";
+    scrollBottom();
+    return row;
+  }
+  function showTyping() {
+    const row = document.createElement("div");
+    row.className = "message assistant";
+    row.id = "typing";
+    const avatar = document.createElement("div");
+    avatar.className = "avatar";
+    avatar.textContent = "Q";
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
+    row.append(avatar,bubble);
+    messagesEl.appendChild(row);
+    scrollBottom();
+  }
+  function renderSaved() {
+    for (const m of messages) if (m.role === "user" || m.role === "assistant") addMessage(m.role,m.content);
+    if (!messages.length) welcome.style.display = "";
+  }
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE) || "[]");
+    if (Array.isArray(saved)) messages = saved.filter(m => m && ["user","assistant"].includes(m.role) && typeof m.content === "string").slice(-40);
+  } catch { messages = []; }
+  renderSaved();
+
+  fetch(API + "/health").then(r => r.ok ? r.json() : Promise.reject()).then(data => {
+    if (data.ok) { statusEl.classList.add("online"); statusText.textContent = "Сервер на связи"; }
+    else throw new Error();
+  }).catch(() => {
+    statusEl.classList.add("offline"); statusText.textContent = "Нет соединения";
+  });
+
+  function setBusy(value) {
+    busy = value;
+    sendBtn.disabled = value || !input.value.trim();
+    input.disabled = value;
+  }
+  function resizeInput() {
+    input.style.height = "auto";
+    input.style.height = Math.min(input.scrollHeight,150) + "px";
+    sendBtn.disabled = busy || !input.value.trim();
+  }
+  input.addEventListener("input",resizeInput);
+  input.addEventListener("keydown",e => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+  });
+  document.querySelectorAll(".suggestion").forEach(btn => btn.addEventListener("click",() => {
+    input.value = btn.textContent; resizeInput(); input.focus(); send();
+  }));
+  document.getElementById("clearBtn").addEventListener("click",() => {
+    if (busy) return;
+    messages = [];
+    persist();
+    messagesEl.replaceChildren();
+    welcome.style.display = "";
+    errorEl.textContent = "";
+  });
+
+  async function send() {
+    const text = input.value.trim();
+    if (!text || busy) return;
+    if (text.length > 4000) { errorEl.textContent = "Сообщение слишком длинное."; return; }
+    const token = window.quantumTurnstileToken || "";
+    if (!token) { errorEl.textContent = "Подожди завершения проверки безопасности Cloudflare."; return; }
+    errorEl.textContent = "";
+    input.value = "";
+    resizeInput();
+    messages.push({role:"user",content:text});
+    addMessage("user",text);
+    persist();
+    setBusy(true);
+    showTyping();
+    try {
+      const response = await fetch(API + "/v1/chat", {
+        method:"POST",
+        headers:{"content-type":"application/json"},
+        body:JSON.stringify({
+          messages:[{role:"system",content:SYSTEM},...messages.slice(-12)],
+          turnstileToken:token
+        })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok) throw new Error(data.error || "Не удалось получить ответ.");
+      messages.push({role:"assistant",content:data.answer});
+      addMessage("assistant",data.answer);
+      persist();
+    } catch (err) {
+      errorEl.textContent = err.message || "Ошибка соединения. Попробуй ещё раз.";
+      messages.pop();
+      persist();
+    } finally {
+      document.getElementById("typing")?.remove();
+      setBusy(false);
+      if (window.turnstile && window.quantumTurnstileId !== undefined) {
+        window.quantumTurnstileToken = "";
+        try { turnstile.reset(window.quantumTurnstileId); } catch {}
+      }
+      input.focus();
+    }
+  }
+  sendBtn.addEventListener("click",send);
+  window.addEventListener("online",() => {
+    statusEl.classList.remove("offline"); statusEl.classList.add("online"); statusText.textContent = "Подключение…";
+    fetch(API+"/health").then(r=>r.ok?r.json():Promise.reject()).then(()=>statusText.textContent="Сервер на связи").catch(()=>{statusEl.classList.remove("online");statusEl.classList.add("offline");statusText.textContent="Нет соединения"});
+  });
+})();
+</script>
+</body>
+</html>
