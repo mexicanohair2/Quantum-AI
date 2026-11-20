@@ -66,14 +66,18 @@ textarea::placeholder{color:#827486}
 </style>
 <script>
 window.onTurnstileLoad = function () {
-  const el = document.getElementById("turnstile");
-  if (!el || !window.turnstile) return;
-  window.quantumTurnstileId = turnstile.render(el, {
+  const mount = () => {
+    const el = document.getElementById("turnstile");
+    if (!el || !window.turnstile || window.quantumTurnstileId !== undefined) return;
+    window.quantumTurnstileId = turnstile.render(el, {
     sitekey: "0x4AAAAAAGK1SlO1zbyfbUBP",
     callback: token => { window.quantumTurnstileToken = token; },
     "expired-callback": () => { window.quantumTurnstileToken = ""; },
-    "error-callback": () => { window.quantumTurnstileToken = ""; }
-  });
+      "error-callback": () => { window.quantumTurnstileToken = ""; }
+    });
+  };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount, { once: true });
+  else mount();
 };
 </script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad&render=explicit" async defer></script>
@@ -226,7 +230,7 @@ window.onTurnstileLoad = function () {
     input.value = "";
     resizeInput();
     messages.push({role:"user",content:text});
-    addMessage("user",text);
+    const userRow = addMessage("user",text);
     persist();
     setBusy(true);
     showTyping();
@@ -247,6 +251,8 @@ window.onTurnstileLoad = function () {
     } catch (err) {
       errorEl.textContent = err.message || "Ошибка соединения. Попробуй ещё раз.";
       messages.pop();
+      userRow.remove();
+      if (!messages.length) welcome.style.display = "";
       persist();
     } finally {
       document.getElementById("typing")?.remove();
