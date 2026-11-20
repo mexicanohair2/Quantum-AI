@@ -169,8 +169,8 @@ textarea::placeholder{color:#827486}
   renderSaved();
 
   fetch(API + "/health").then(r => r.ok ? r.json() : Promise.reject()).then(data => {
-    if (data.ok) { statusEl.classList.add("online"); statusText.textContent = "Сервер на связи"; }
-    else throw new Error();
+    if (data.ok && data.coreReady) { statusEl.classList.add("online"); statusText.textContent = "Quantum-AI готова"; }
+    else { statusText.textContent = "Ядро в разработке"; }
   }).catch(() => {
     statusEl.classList.add("offline"); statusText.textContent = "Нет соединения";
   });
@@ -241,7 +241,7 @@ textarea::placeholder{color:#827486}
   sendBtn.addEventListener("click",send);
   window.addEventListener("online",() => {
     statusEl.classList.remove("offline"); statusEl.classList.add("online"); statusText.textContent = "Подключение…";
-    fetch(API+"/health").then(r=>r.ok?r.json():Promise.reject()).then(()=>statusText.textContent="Сервер на связи").catch(()=>{statusEl.classList.remove("online");statusEl.classList.add("offline");statusText.textContent="Нет соединения"});
+    fetch(API+"/health").then(r=>r.ok?r.json():Promise.reject()).then(data=>statusText.textContent=data.coreReady?"Quantum-AI готова":"Ядро в разработке").catch(()=>{statusEl.classList.remove("online");statusEl.classList.add("offline");statusText.textContent="Нет соединения"});
   });
 })();
 </script>
