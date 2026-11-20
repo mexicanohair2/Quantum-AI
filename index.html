@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#120d16">
+<meta name="description" content="Quantum-AI — исследовательский проект собственной языковой модели. Архитектура, модули и статус разработки.">
+<title>Quantum-AI — собственная языковая модель</title>
+<style>
+:root{color-scheme:dark;--bg:#100c13;--panel:#1a121e;--line:#39263d;--text:#f1eaf2;--muted:#b7a8ba;--warn:#e0b77c}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse at 82% 0%,#39203a 0,transparent 36%),radial-gradient(ellipse at 0% 30%,#351a2b 0,transparent 30%),var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,Segoe UI,sans-serif}
+a{color:#e6a9c0;text-decoration:none}a:hover{text-decoration:underline}.wrap{width:min(1100px,calc(100% - 36px));margin:auto}
+header{padding:22px 0;border-bottom:1px solid #ffffff12;position:sticky;top:0;background:#100c13e8;backdrop-filter:blur(16px);z-index:5}.nav{display:flex;align-items:center;justify-content:space-between;gap:16px}.brand{font-weight:750;letter-spacing:.04em}.brand span{color:#d68da7}.navlinks{display:flex;gap:20px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
+.hero{padding:92px 0 70px}.eyebrow{color:#d49ab0;text-transform:uppercase;letter-spacing:.18em;font-size:12px;font-weight:700}.hero h1{font-size:clamp(42px,8vw,78px);line-height:1.04;letter-spacing:-.055em;margin:18px 0}.hero h1 em{font-style:normal;background:linear-gradient(100deg,#f0c3d1,#aa8ac8);-webkit-background-clip:text;background-clip:text;color:transparent}.lead{max-width:720px;color:#c7b9c9;font-size:19px}.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}.btn{display:inline-flex;padding:12px 18px;border-radius:13px;border:1px solid #70445f;background:linear-gradient(120deg,#613247,#382443);color:#fff;font-weight:650}.btn.secondary{background:#1c1520;border-color:#49364d;color:#e9dce9}
+section{padding:52px 0}h2{font-size:clamp(27px,4vw,38px);line-height:1.2;letter-spacing:-.03em;margin:0 0 14px}.sub{color:var(--muted);max-width:720px;margin:0 0 28px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{background:linear-gradient(145deg,#211725,#17121a);border:1px solid var(--line);border-radius:18px;padding:22px;min-width:0}.card h3{margin:0 0 8px;font-size:18px}.card p{margin:0;color:var(--muted);font-size:14px}.tag{display:inline-block;color:#e3a8bf;background:#47273a;border:1px solid #6a3b55;border-radius:7px;padding:2px 8px;font-size:11px;margin-bottom:12px}
+.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.node{padding:16px;border:1px solid #49344e;border-radius:14px;background:#1c1521;text-align:center}.node b{display:block;color:#e8c4d3}.node small{display:block;color:var(--muted);margin-top:5px}
+.note{border:1px solid #70543a;background:#251d19;border-radius:16px;padding:18px 20px;color:#dfc9aa}.note strong{color:#f0d8b5}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.stat{padding:20px;border-radius:16px;background:#1b1420;border:1px solid var(--line)}.stat strong{display:block;font-size:26px;color:#e7b4c6}.stat span{font-size:13px;color:var(--muted)}
+footer{border-top:1px solid #ffffff14;padding:28px 0 40px;color:var(--muted);font-size:13px}
+@media(max-width:760px){.grid{grid-template-columns:repeat(2,1fr)}.flow{grid-template-columns:repeat(2,1fr)}.hero{padding:66px 0 48px}.navlinks{gap:12px}}
+@media(max-width:480px){.grid,.stats{grid-template-columns:1fr}.nav{align-items:flex-start;flex-direction:column}.navlinks{font-size:13px}.hero h1{font-size:48px}}
+</style>
+</head>
+<body>
+<header><div class="wrap nav"><a class="brand" href="#">QUANTUM<span>·</span>AI</a><nav class="navlinks"><a href="#architecture">Архитектура</a><a href="#modules">Модули</a><a href="#status">Статус</a><a href="https://github.com/mexicanohair2/Quantum-AI">GitHub</a></nav></div></header>
+<main>
+<div class="wrap hero"><div class="eyebrow">Independent model research</div><h1>Quantum<em>-AI</em></h1><p class="lead">Исследовательский проект собственной языковой модели: от токенизатора и Transformer-ядра до памяти, reasoning, поиска и мультимодальности.</p><div class="actions"><a class="btn" href="https://github.com/mexicanohair2/Quantum-AI">Открыть репозиторий ↗</a><a class="btn secondary" href="docs/DEEPSEEK_TRANSFER.md">Технические материалы</a></div></div>
+<section id="architecture"><div class="wrap"><h2>Архитектура системы</h2><p class="sub">Модульная структура, описанная в материалах проекта. Схема отражает целевое разделение компонентов, а не подтверждение готовой реализации.</p><div class="flow"><div class="node"><b>Tokenizer</b><small>Byte-level BPE</small></div><div class="node"><b>Quantum Core</b><small>Transformer · GQA</small></div><div class="node"><b>Generation</b><small>Sampling · streaming</small></div><div class="node"><b>Response</b><small>UTF-8 output</small></div></div></div></section>
+<section id="modules"><div class="wrap"><h2>Основные направления</h2><p class="sub">Сведения, восстановленные из обсуждений материалов DeepSeek.</p><div class="grid">
+<article class="card"><span class="tag">CORE</span><h3>Языковое ядро</h3><p>PyTorch Transformer, RMSNorm, Grouped-Query Attention, SwiGLU и causal attention.</p></article>
+<article class="card"><span class="tag">TEXT</span><h3>Токенизатор</h3><p>Byte-level BPE с диапазоном специальных, байтовых и объединённых токенов.</p></article>
+<article class="card"><span class="tag">INFERENCE</span><h3>Генерация</h3><p>Top-k / top-p, repetition penalty, потоковая выдача и сборка UTF-8.</p></article>
+<article class="card"><span class="tag">TRAINING</span><h3>Обучение</h3><p>Train loop, scheduler, сохранение checkpoint и возобновление обучения.</p></article>
+<article class="card"><span class="tag">MEMORY</span><h3>Память</h3><p>SQLite-хранилище, разделение пользовательских данных и embeddings.</p></article>
+<article class="card"><span class="tag">REASONING</span><h3>Рассуждения</h3><p>AST-парсер с белым списком разрешённых операций и математических функций.</p></article>
+<article class="card"><span class="tag">SEARCH</span><h3>Веб-поиск</h3><p>Поиск страниц и проверки адресов/IP для защиты от SSRF и небезопасных редиректов.</p></article>
+<article class="card"><span class="tag">VISION</span><h3>Компьютерное зрение</h3><p>CNN-признаки, spatial tokens, projection и cross-attention.</p></article>
+<article class="card"><span class="tag">QUALITY</span><h3>Тестирование</h3><p>Тесты токенизатора, модели, памяти, поиска, обучения и интеграции.</p></article>
+</div></div></section>
+<section><div class="wrap"><h2>Принципы разработки</h2><div class="grid"><div class="card"><h3>Проверяемость</h3><p>Результаты тестов и обучения публикуются только при наличии воспроизводимых запусков и логов.</p></div><div class="card"><h3>Без подмены ядра</h3><p>Инструменты, поиск и память расширяют систему, но не выдаются за собственную языковую модель.</p></div><div class="card"><h3>Прозрачность</h3><p>Происхождение весов, данных, библиотек и внешних сервисов должно быть явно обозначено.</p></div></div></div></section>
+<section id="status"><div class="wrap"><h2>Текущий статус</h2><p class="sub">Сайт и документация публикуются в репозитории. Техническая реализация модели требует отдельной проверки исходников.</p><div class="stats"><div class="stat"><strong>Docs</strong><span>Сводка материалов добавлена</span></div><div class="stat"><strong>Web</strong><span>Статический сайт проекта</span></div><div class="stat"><strong>Model</strong><span>Исходники и inference не подтверждены</span></div></div><div class="note" style="margin-top:18px"><strong>Важно.</strong> В доступной истории обнаружены описания модулей и отдельные технические контрольные значения, но не полные исходные листинги DeepSeek. Поэтому этот сайт — информационная страница проекта, а не работающий чат с моделью. Полный перенос кода нельзя честно отметить как завершённый до восстановления оригинальных файлов.</div><p style="margin-top:20px"><a href="docs/DEEPSEEK_TRANSFER.md">Открыть полный отчёт о переносе →</a></p></div></section>
+</main><footer><div class="wrap">Quantum-AI · Research project · <a href="https://github.com/mexicanohair2/Quantum-AI">GitHub repository</a></div></footer>
+</body></html>
