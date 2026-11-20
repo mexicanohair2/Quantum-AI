@@ -34,7 +34,7 @@ export default {
     }
 
     if (request.method === "GET" && url.pathname === "/health") {
-      return json({ ok: false, service: "Quantum-AI", core: "not-integrated" }, 503);
+      return json({ ok: true, service: "Quantum-AI", coreReady: false });
     }
     if (request.method !== "POST" || url.pathname !== "/v1/chat") {
       return json({ error: "Not found" }, 404);
