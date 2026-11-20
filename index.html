@@ -111,9 +111,7 @@ textarea::placeholder{color:#827486}
 </div>
 <script>
 (() => {
-  const API = "https://quantum-ai-api.qq-ai-cloud.workers.dev";
   const STORAGE = "quantum-ai-chat-v1";
-  const SYSTEM = "Ты — Quantum-AI, самостоятельный русскоязычный интеллектуальный помощник. Отвечай точно, спокойно и по существу. Если не уверен — прямо обозначай неопределённость. Не выдумывай выполненные действия, источники или результаты проверок.";
   const chat = document.getElementById("chat");
   const messagesEl = document.getElementById("messages");
   const welcome = document.getElementById("welcome");
@@ -168,12 +166,7 @@ textarea::placeholder{color:#827486}
   } catch { messages = []; }
   renderSaved();
 
-  fetch(API + "/health").then(r => r.ok ? r.json() : Promise.reject()).then(data => {
-    if (data.ok && data.coreReady) { statusEl.classList.add("online"); statusText.textContent = "Quantum-AI готова"; }
-    else { statusText.textContent = "Ядро в разработке"; }
-  }).catch(() => {
-    statusEl.classList.add("offline"); statusText.textContent = "Нет соединения";
-  });
+  statusText.textContent = "Ядро в разработке";
 
   function setBusy(value) {
     busy = value;
@@ -214,18 +207,7 @@ textarea::placeholder{color:#827486}
     setBusy(true);
     showTyping();
     try {
-      const response = await fetch(API + "/v1/chat", {
-        method:"POST",
-        headers:{"content-type":"application/json"},
-        body:JSON.stringify({
-          messages:[{role:"system",content:SYSTEM},...messages.slice(-12)]
-        })
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data.ok) throw new Error(data.error || "Не удалось получить ответ.");
-      messages.push({role:"assistant",content:data.answer});
-      addMessage("assistant",data.answer);
-      persist();
+      throw new Error("Собственное ядро Quantum-AI ещё не интегрировано в веб-чат. Внешние языковые модели отключены.");
     } catch (err) {
       errorEl.textContent = err.message || "Ошибка соединения. Попробуй ещё раз.";
       messages.pop();
@@ -239,10 +221,6 @@ textarea::placeholder{color:#827486}
     }
   }
   sendBtn.addEventListener("click",send);
-  window.addEventListener("online",() => {
-    statusEl.classList.remove("offline"); statusEl.classList.add("online"); statusText.textContent = "Подключение…";
-    fetch(API+"/health").then(r=>r.ok?r.json():Promise.reject()).then(data=>statusText.textContent=data.coreReady?"Quantum-AI готова":"Ядро в разработке").catch(()=>{statusEl.classList.remove("online");statusEl.classList.add("offline");statusText.textContent="Нет соединения"});
-  });
 })();
 </script>
 </body>
