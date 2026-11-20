@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#100b12">
-<meta name="description" content="Quantum-AI — чат с DeepSeek V4.1 Flash.">
-<title>Quantum-AI — DeepSeek</title>
+<meta name="description" content="Quantum-AI — самостоятельный интеллектуальный помощник.">
+<title>Quantum-AI</title>
 <style>
 :root{color-scheme:dark;--bg:#100b12;--panel:#19121c;--panel2:#211725;--line:#38283b;--text:#f3edf4;--muted:#a99aaa;--accent:#c58aa8;--accent2:#9274b1;--user:#392433;--assistant:#201925}
 *{box-sizing:border-box}
@@ -58,29 +58,11 @@ textarea::placeholder{color:#827486}
 .send{width:39px;height:39px;border:0;border-radius:13px;background:linear-gradient(145deg,#a76583,#684b7f);color:white;display:grid;place-items:center;box-shadow:0 5px 16px #0005}
 .send:disabled{opacity:.4;cursor:not-allowed}
 .send svg{width:18px;height:18px}
-.security{max-width:760px;margin:9px auto 0;display:flex;justify-content:center;min-height:0}
-#turnstile{min-height:0;transform:scale(.82);transform-origin:top center}
 .disclaimer{text-align:center;color:#766a7b;font-size:10px;margin-top:7px}
 .error{max-width:760px;margin:0 auto 10px;color:#e3aaa2;font-size:12px;text-align:center}
 @media(max-width:600px){.app{padding:0 12px}header{height:62px}.brand-name{font-size:16px}.status{font-size:11px}.welcome{margin-top:6vh}.suggestions{grid-template-columns:1fr}.chat{padding-top:18px}.bubble{max-width:88%;font-size:14px}.composer{border-radius:17px}.hint{font-size:10px}}
 </style>
-<script>
-window.onTurnstileLoad = function () {
-  const mount = () => {
-    const el = document.getElementById("turnstile");
-    if (!el || !window.turnstile || window.quantumTurnstileId !== undefined) return;
-    window.quantumTurnstileId = turnstile.render(el, {
-    sitekey: "0x4AAAAAAGK1SlO1zbyfbUBP",
-    callback: token => { window.quantumTurnstileToken = token; },
-    "expired-callback": () => { window.quantumTurnstileToken = ""; },
-      "error-callback": () => { window.quantumTurnstileToken = ""; }
-    });
-  };
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount, { once: true });
-  else mount();
-};
-</script>
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad&render=explicit" async defer></script>
+
 </head>
 <body>
 <div class="app">
@@ -102,7 +84,7 @@ window.onTurnstileLoad = function () {
       <div class="orb">Q</div>
       <h1>Чем займёмся?</h1>
       <p>Задавай вопросы, разбирай сложные темы, придумывай идеи или работай над проектами. Я готов помочь.</p>
-      <div class="model-pill"><i></i> DeepSeek V4.1 Flash</div>
+      <div class="model-pill"><i></i> Собственное ядро Quantum-AI</div>
       <div class="suggestions">
         <button class="suggestion">Объясни сложную тему простыми словами</button>
         <button class="suggestion">Помоги придумать и спланировать проект</button>
@@ -123,8 +105,7 @@ window.onTurnstileLoad = function () {
         </button>
       </div>
     </div>
-    <div class="security"><div id="turnstile"></div></div>
-    <div class="disclaimer">DeepSeek V4.1 Flash · использование тарифицируется по правилам Cloudflare Workers AI.</div>
+    <div class="disclaimer">Quantum-AI · самостоятельная разработка</div>
   </div>
 </main>
 </div>
@@ -132,7 +113,7 @@ window.onTurnstileLoad = function () {
 (() => {
   const API = "https://quantum-ai-api.qq-ai-cloud.workers.dev";
   const STORAGE = "quantum-ai-chat-v1";
-  const SYSTEM = "Ты — Quantum-AI, русскоязычный интеллектуальный помощник. Твой языковой движок — DeepSeek V4.1 Flash. Отвечай точно, спокойно и по существу. Если не уверен — прямо обозначай неопределённость. Не выдумывай выполненные действия, источники или результаты проверок. Для кода сохраняй существующий функционал и объясняй важные ограничения.";
+  const SYSTEM = "Ты — Quantum-AI, самостоятельный русскоязычный интеллектуальный помощник. Отвечай точно, спокойно и по существу. Если не уверен — прямо обозначай неопределённость. Не выдумывай выполненные действия, источники или результаты проверок.";
   const chat = document.getElementById("chat");
   const messagesEl = document.getElementById("messages");
   const welcome = document.getElementById("welcome");
@@ -224,8 +205,6 @@ window.onTurnstileLoad = function () {
     const text = input.value.trim();
     if (!text || busy) return;
     if (text.length > 4000) { errorEl.textContent = "Сообщение слишком длинное."; return; }
-    const token = window.quantumTurnstileToken || "";
-    if (!token) { errorEl.textContent = "Подожди завершения проверки безопасности Cloudflare."; return; }
     errorEl.textContent = "";
     input.value = "";
     resizeInput();
@@ -239,8 +218,7 @@ window.onTurnstileLoad = function () {
         method:"POST",
         headers:{"content-type":"application/json"},
         body:JSON.stringify({
-          messages:[{role:"system",content:SYSTEM},...messages.slice(-12)],
-          turnstileToken:token
+          messages:[{role:"system",content:SYSTEM},...messages.slice(-12)]
         })
       });
       const data = await response.json().catch(() => ({}));
@@ -257,10 +235,6 @@ window.onTurnstileLoad = function () {
     } finally {
       document.getElementById("typing")?.remove();
       setBusy(false);
-      if (window.turnstile && window.quantumTurnstileId !== undefined) {
-        window.quantumTurnstileToken = "";
-        try { turnstile.reset(window.quantumTurnstileId); } catch {}
-      }
       input.focus();
     }
   }
