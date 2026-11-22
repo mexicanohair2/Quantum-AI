@@ -1,5 +1,5 @@
-const SHELL_CACHE = "quantum-ai-shell-v1";
-const APP_FILES = ["./", "./index.html", "./src/app.js", "./src/quantum-engine.js", "./manifest.webmanifest", "./icon.svg"];
+const SHELL_CACHE = "quantum-ai-shell-v2";
+const APP_FILES = ["./", "./index.html", "./src/app.js", "./manifest.webmanifest", "./icon.svg"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(SHELL_CACHE).then((cache) => cache.addAll(APP_FILES)).then(() => self.skipWaiting()));
