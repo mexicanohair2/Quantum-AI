@@ -41,7 +41,7 @@ export async function loadLocalModel(onProgress) {
       device: device,
       dtype: {
         embed_tokens: "q4",
-        vision_encoder: "q4",
+        vision_encoder: "fp16",
         decoder_model_merged: "q4"
       },
       progress_callback: function (item) { report(onProgress, item); }
