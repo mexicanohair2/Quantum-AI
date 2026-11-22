@@ -1,20 +1,11 @@
-import { searchWeb } from "./web-search.js";
-
 const $ = (id) => document.getElementById(id);
 const STORE_KEY = "quantum-ai-workspace-v1";
 const LEGACY_KEY = "quantum-ai-chat-v2";
 const MAX_CHATS = 80;
 const MAX_MESSAGES = 120;
-const SEARCH_HISTORY_KEY = "quantum-ai-web-search-history-v1";
 
 let state = loadWorkspace();
 let currentView = "chat";
-let currentResults = [];
-let currentSearchQuery = "";
-let searchBusy = false;
-let searchError = "";
-let searchTopic = "general";
-let searchRequestId = 0;
 
 function makeId() {
   if (window.crypto && typeof window.crypto.randomUUID === "function") return window.crypto.randomUUID();
@@ -92,22 +83,13 @@ function activeConversation() {
   return state.conversations.find((chat) => chat.id === state.activeId) || null;
 }
 
-function setView(view) {
-  currentView = view === "search" ? "search" : "chat";
-  $("chatView").hidden = currentView !== "chat";
-  $("searchView").hidden = currentView !== "search";
-  $("chatNav").classList.toggle("active", currentView === "chat");
-  $("webSearchNav").classList.toggle("active", currentView === "search");
-
-  if (currentView === "search") {
-    $("viewKicker").textContent = "ОТКРЫТЫЕ ИСТОЧНИКИ";
-    $("viewTitle").textContent = "Поиск в интернете";
-    requestAnimationFrame(() => $("webQuery").focus());
-  } else {
-    $("viewKicker").textContent = "ЛИЧНОЕ ПРОСТРАНСТВО";
-    const chat = activeConversation();
-    $("viewTitle").textContent = chat ? chat.title : "Новый разговор";
-  }
+function setView() {
+  currentView = "chat";
+  $("chatView").hidden = false;
+  $("chatNav").classList.add("active");
+  $("viewKicker").textContent = "ЛИЧНОЕ ПРОСТРАНСТВО";
+  const chat = activeConversation();
+  $("viewTitle").textContent = chat ? chat.title : "Новый разговор";
   closeSidebar();
 }
 
@@ -318,133 +300,6 @@ function closeSidebar() {
   $("sidebarBackdrop").classList.remove("visible");
 }
 
-function setSearchState(message, count) {
-  $("searchState").querySelector("span").textContent = message;
-  $("searchResultCount").textContent = count || "";
-}
-
-function saveSearchHistory(query) {
-  try {
-    const old = JSON.parse(localStorage.getItem(SEARCH_HISTORY_KEY) || "[]");
-    const updated = [query, ...(Array.isArray(old) ? old : []).filter((item) => item !== query)].slice(0, 12);
-    localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(updated));
-  } catch (_) {}
-}
-
-function renderSearchResults() {
-  const host = $("searchResults");
-  host.replaceChildren();
-  $("searchEmpty").hidden = true;
-
-  if (searchBusy) {
-    const loading = document.createElement("div");
-    loading.className = "search-empty";
-    const spinner = document.createElement("span");
-    spinner.className = "spinner";
-    spinner.style.display = "inline-block";
-    spinner.style.verticalAlign = "middle";
-    spinner.style.marginRight = "10px";
-    loading.append(spinner, document.createTextNode("Ищем подходящие страницы…"));
-    host.append(loading);
-    return;
-  }
-
-  if (searchError) {
-    const box = document.createElement("div");
-    box.className = "search-empty";
-    const text = document.createElement("p");
-    text.textContent = searchError;
-    const fallback = document.createElement("a");
-    fallback.href = "https://www.google.com/search?q=" + encodeURIComponent(currentSearchQuery);
-    fallback.target = "_blank";
-    fallback.rel = "noopener noreferrer";
-    fallback.className = "result-title";
-    fallback.textContent = "Открыть этот запрос во внешнем поиске";
-    box.append(text, fallback);
-    host.append(box);
-    return;
-  }
-
-  if (!currentResults.length && currentSearchQuery) {
-    $("searchEmpty").hidden = false;
-    return;
-  }
-
-  currentResults.forEach((result) => {
-    const card = document.createElement("article");
-    card.className = "search-result";
-
-    const meta = document.createElement("div");
-    meta.className = "result-meta";
-    const favicon = document.createElement("span");
-    favicon.className = "result-favicon";
-    favicon.textContent = "↗";
-    const domain = document.createElement("span");
-    domain.className = "result-domain";
-    try { domain.textContent = new URL(result.url).hostname.replace(/^www\./, ""); }
-    catch (_) { domain.textContent = result.url; }
-    meta.append(favicon, domain);
-
-    const link = document.createElement("a");
-    link.className = "result-title";
-    link.href = result.url;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    link.textContent = result.title;
-
-    const snippet = document.createElement("p");
-    snippet.className = "result-snippet";
-    snippet.textContent = result.content || "Открой страницу, чтобы прочитать материал.";
-
-    card.append(meta, link, snippet);
-    if (result.publishedDate) {
-      const date = document.createElement("div");
-      date.className = "result-date";
-      date.textContent = "Дата публикации: " + result.publishedDate;
-      card.append(date);
-    }
-    host.append(card);
-  });
-}
-
-async function runWebSearch(query) {
-  const cleanQuery = String(query || "").trim();
-  if (!cleanQuery || searchBusy) return;
-  const requestId = ++searchRequestId;
-  currentSearchQuery = cleanQuery;
-  searchResultsReset();
-  searchBusy = true;
-  searchError = "";
-  $("webQuery").value = cleanQuery;
-  $("searchSubmit").disabled = true;
-  setSearchState("Ищем по открытым веб-источникам…", "");
-  renderSearchResults();
-
-  try {
-    const response = await searchWeb(cleanQuery, { topic: searchTopic, maxResults: 7 });
-    if (requestId !== searchRequestId) return;
-    currentResults = response.results;
-    saveSearchHistory(cleanQuery);
-    searchBusy = false;
-    setSearchState("Результаты по запросу: " + cleanQuery, currentResults.length ? currentResults.length + " страниц" : "");
-  } catch (error) {
-    if (requestId !== searchRequestId) return;
-    searchBusy = false;
-    searchError = error && error.message ? error.message : "Не удалось выполнить поиск.";
-    setSearchState("Поиск не завершился", "");
-  } finally {
-    if (requestId === searchRequestId) {
-      $("searchSubmit").disabled = false;
-      renderSearchResults();
-    }
-  }
-}
-
-function searchResultsReset() {
-  currentResults = [];
-  searchError = "";
-}
-
 $("chatHistory").addEventListener("click", (event) => {
   const button = event.target.closest("button[data-action]");
   if (!button) return;
@@ -456,7 +311,6 @@ $("chatHistory").addEventListener("click", (event) => {
 
 $("newChatBtn").addEventListener("click", createChat);
 $("chatNav").addEventListener("click", () => setView("chat"));
-$("webSearchNav").addEventListener("click", () => setView("search"));
 $("chatFilter").addEventListener("input", renderHistory);
 $("menuBtn").addEventListener("click", openSidebar);
 $("closeSidebarBtn").addEventListener("click", closeSidebar);
@@ -481,19 +335,15 @@ document.querySelectorAll("[data-suggestion='history']").forEach((button) => {
 
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") closeSidebar();
-  if (event.key === "/" && !["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName)) {
-    event.preventDefault();
-    setView("search");
-  }
-});
+  });
 
 function initialize() {
   renderHistory();
   renderCurrentChat();
-  setView("chat");
+  setView();
   $("prompt").disabled = true;
   $("sendBtn").disabled = true;
-  $("prompt").placeholder = "Онлайн-чат станет доступен после подключения сервиса…";
+  $("prompt").placeholder = "Напиши сообщение — чат подключается…";
 }
 
 initialize();
