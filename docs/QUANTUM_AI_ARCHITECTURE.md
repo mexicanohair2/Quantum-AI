@@ -1,115 +1,81 @@
 # Quantum-AI — актуальная архитектура и статус
 
-**Дата обновления:** 22 ноября 2026 года  
-**Стратегия:** бесплатное приложение на базе открытой Qwen, без платных API, ключей, подписок и обязательного сервера.
+**Обновлено:** 22 ноября 2026 года  
+**Главное изменение:** целевой режим теперь только ONLINE. Локальный запуск модели на телефоне больше не является целевой архитектурой.
 
-## 1. Продуктовое решение
+## 1. Продуктовые правила
 
 - Продукт называется **Quantum-AI**.
-- Qwen — текущее языковое ядро. Приложение не выдаёт веса Qwen за собственную модель.
-- QQ-AI остаётся отдельным архивом наработок. Слияние репозиториев не выполнять без отдельного аудита и необходимости.
-- Обучение собственной foundation model с нуля не входит в ближайший план.
-- Основной пользовательский сценарий — запуск на телефоне, минимум настройки, локальная генерация.
-- Внешние запросы разрешены только для отдельных дополнительных функций (например, Wikipedia search) и должны быть явно обозначены.
+- Qwen — текущее языковое ядро; происхождение модели и лицензия указываются честно.
+- Приложение работает как онлайн-клиент: интерфейс на GitHub Pages, генерация на удалённом сервере.
+- Целевые ограничения: бесплатно, без платных API, подписок, оплаты сервера, платёжных карт и API-ключей, которые пользователь должен получать или настраивать.
+- Не обещать неограниченный бесплатный доступ, если провайдер ограничивает минуты, очередь, частоту запросов или время работы.
+- Не помещать секреты и привилегированные ключи в клиентский JavaScript или публичный GitHub-репозиторий.
+- QQ-AI остаётся отдельным источником прежних наработок; не смешивать репозитории без отдельного аудита.
+- Обучение собственной foundation model с нуля не входит в ближайший этап.
 
-## 2. Выбранный первый runtime
+## 2. Исследование бесплатного онлайн-хостинга
 
-- ONNX model: onnx-community/Qwen3.5-0.8B-ONNX.
-- Runtime: @huggingface/transformers 4.3.2.
-- Model class: Qwen3_5ForConditionalGeneration with AutoProcessor.
-- Quantization: q4 for embedding and decoder; fp16 for the vision encoder, following the model-card example.
-- Preferred execution: WebGPU when navigator.gpu.requestAdapter() succeeds.
-- Fallback: ONNX Runtime WASM/CPU. This may be substantially slower and can fail on constrained devices.
-- Model artifacts are downloaded from the public Hugging Face Hub at first launch. No API token is required for the public model.
+### Кандидат: Hugging Face Spaces ZeroGPU
 
-The model card documents the ONNX Transformers.js integration, Qwen3.5 multimodal architecture and Apache-2.0 license. The 0.8B model is a small model for prototyping/lightweight tasks; do not describe it as equal to a large hosted Qwen model.
+По актуальной официальной документации:
+- ZeroGPU предоставляет динамический GPU для Spaces.
+- Личный бесплатный аккаунт в хорошем состоянии (подтверждённая почта, возраст аккаунта более 30 дней) может размещать до двух ZeroGPU Spaces.
+- Квота использования для бесплатного аккаунта — 5 минут GPU в день; без авторизации — 2 минуты в день. Доступность и очередь не гарантируются.
+- Обычные Gradio/Docker Spaces на CPU Basic не являются надёжным бесплатным вариантом для нового бесплатного аккаунта по текущим правилам.
+- Следовательно, ZeroGPU — кандидат для прототипа, но не источник гарантированного неограниченного бесплатного инференса.
 
-## 3. Device strategy
+Официальные источники:
+- https://huggingface.co/docs/hub/spaces-zerogpu
+- https://huggingface.co/docs/hub/spaces-overview
+- https://huggingface.co/pricing
 
-1. Detect a usable WebGPU adapter at runtime instead of trusting the device name.
-2. Use q4 weights for embedding and decoder; keep the vision encoder at fp16 as shown in the model-card example.
-3. If WebGPU loading fails, attempt WASM as a slower fallback.
-4. Show a clear loading/progress state and a clear error when both routes fail.
-5. Keep the first-run download warning visible (roughly 0.7 GB of selected q4 artifacts; exact transfer depends on runtime and model repository revisions).
-6. Validate latency, RAM use, temperature, browser cache persistence and image inference on the physical target phone before marking support as verified.
+### Условия допуска провайдера
 
-The HONOR 400 product specification lists Snapdragon 7 Gen 3 and Adreno 720; Chrome documents Android WebGPU availability on Android 12+ devices with Qualcomm/ARM GPUs. This makes WebGPU a reasonable candidate, not a guarantee that every installed browser build will expose a working adapter.
+До интеграции нужно подтвердить:
+1. Можно ли вызвать конкретный Space из нашего сайта через публичный HTTPS API без пользовательского API-ключа.
+2. Какая авторизация нужна посетителю и как расходуется его бесплатная квота.
+3. Поддерживает ли выбранный Space Qwen3.5 и потоковую генерацию.
+4. Что происходит при исчерпании дневной квоты, холодном старте, очереди и остановке Space.
+5. Нет ли скрытого биллинга или необходимости привязать платёжную карту.
+6. Какие данные отправляются провайдеру и как это прозрачно объяснить пользователю.
 
-## 4. Current app modules
+Никаких сторонних публичных Space не подключать как постоянный backend без проверки владельца, кода, модели, условий и API.
 
-- index.html: mobile-first interface and controls.
-- src/app.js: chat state, local history, attachments, voice controls, Wikipedia search and UI lifecycle.
-- src/quantum-engine.js: Qwen loading, WebGPU/WASM selection, multimodal preprocessing and local generation.
-- sw.js: cache-first app shell for installability/offline page access.
-- manifest.webmanifest: installable PWA metadata.
-- scripts/validate.mjs: static regression checks.
+## 3. Целевая онлайн-архитектура
 
-## 5. Data flow and privacy
+Пользовательский браузер → GitHub Pages frontend → HTTPS запрос → удалённый Qwen runtime → потоковый ответ → интерфейс Quantum-AI.
 
-### Local chat
-User message → local browser app → Qwen ONNX runtime → local answer → local browser history.
+- Frontend не содержит секретов.
+- Инференс не выполняется на телефоне.
+- История диалога и память — отдельный слой, не зависящий от конкретного inference provider.
+- Поиск, документы, изображения и голос — отдельные модули. Их сетевые потоки и ограничения должны быть явно описаны.
+- Временное отсутствие backend не маскировать имитацией ответа или локальным запуском модели.
 
-No inference API endpoint, API key, paid cloud model or remote chat backend exists in this implementation.
+## 4. Состояние опубликованного прототипа
 
-### Image
-Image file → browser object URL → Qwen processor/vision encoder → local generation. Image is not uploaded to an inference server by the app.
+На момент обновления репозиторий всё ещё содержит прежнюю локальную реализацию:
+- Transformers.js 4.3.2.
+- Qwen3.5-0.8B ONNX.
+- WebGPU и WASM/CPU fallback.
+- Локальная история и экспорт.
+- Изображения и текстовые вложения.
+- Browser speech input/output.
+- Wikipedia search.
+- PWA shell cache.
 
-### Text files
-TXT/MD/JSON/CSV file → browser text read → bounded text context → local Qwen. Unsupported office/PDF/video formats are not claimed as supported.
+Эта реализация не соответствует новой целевой архитектуре ONLINE и должна считаться историческим прототипом до замены backend. Не утверждать, что онлайн-инференс уже подключён.
 
-### Wikipedia search
-User explicitly toggles search or uses a search-intent phrase → Wikipedia public MediaWiki API → short snippets and source links → Qwen receives those snippets. This feature needs internet and is not a general crawler for the entire web.
+## 5. Следующие инженерные задачи
 
-### Voice
-- Speech recognition uses the browser SpeechRecognition/Web Speech API where available. The browser may use an online recognition service; offline behavior is not guaranteed.
-- Speech output uses browser/device speech synthesis, subject to installed voices.
+1. Проверить бесплатный ZeroGPU путь и его реальные условия.
+2. Подготовить отдельный backend Space для Qwen, если он доступен без платежей и скрытых ключей.
+3. Проверить Qwen3.5-0.8B совместимость с runtime и GPU, потоковую генерацию и cold start.
+4. Создать безопасный frontend-to-backend контракт.
+5. Перевести GitHub Pages интерфейс с локального model loader на online inference.
+6. Сохранить локальную историю только как клиентскую функцию, если она подходит выбранной политике приватности.
+7. Провести реальный end-to-end тест с телефона.
 
-### Storage
-- Conversation history: browser localStorage, bounded to a fixed number of recent messages.
-- App shell: service worker cache.
-- Model weights/runtime: Transformers.js browser cache where supported.
-- Browser/OS cache eviction can remove model files; re-download may then be required.
-- No cross-device account or cloud sync is implemented.
+## 6. Release gate
 
-## 6. Security and reliability requirements
-
-- Never add privileged secrets or API keys to client files.
-- Never claim model inference is online or local unless the selected route says so.
-- Insert user/model/search content through text-safe DOM APIs, not untrusted HTML.
-- Limit attachment sizes and message context.
-- Use explicit external links with noopener noreferrer.
-- Handle missing WebGPU, failed model downloads, storage exhaustion, offline state and browser speech API absence without blanking the chat.
-- Keep project changes isolated from QQCross.
-
-## 7. Implemented vs pending
-
-### Implemented in repository
-- Qwen3.5-0.8B ONNX loading path via Transformers.js.
-- WebGPU detection with WASM fallback attempt.
-- Local text generation and streaming.
-- Image attachment and multimodal processor path.
-- TXT/MD/JSON/CSV text attachment.
-- Local chat history, export and clear.
-- Browser voice dictation and speech synthesis.
-- Keyless Wikipedia search.
-- PWA app-shell caching and basic validation workflow.
-
-### Not yet physically verified
-- First model download and end-to-end inference on HONOR 400.
-- Exact download bytes and retained browser cache after restart/offline.
-- WebGPU stability, generation speed, memory use and thermal behavior on the target phone.
-- Image inference on the target phone.
-- SpeechRecognition support and whether the installed browser uses online speech service.
-- GitHub Pages deployment and real-world mobile layout after this commit.
-
-### Still to build
-- Better memory beyond conversation history.
-- PDF/DOCX parsing and richer document workflows.
-- Broader web search with reliable citations.
-- Robust conversation management, editable memory and user settings.
-- More capable local model profiles if the device can safely run them.
-- Automated browser-level integration tests on a supported mobile device.
-
-## 8. Release gate
-
-A function is not marked complete just because code exists. It must pass static/automated checks and, where hardware matters, a real device test. The first release gate is: load Qwen successfully, answer a multi-turn text conversation, process one image, restore history after reload, and complete an offline test after model/runtime caching.
+Quantum-AI можно называть ONLINE только после успешного теста: пользователь открывает опубликованный сайт, отправляет сообщение, запрос доходит до удалённого Qwen backend, ответ возвращается в интерфейс, и весь путь работает без платного ключа/платёжной карты. Бесплатные квоты и ограничения должны быть показаны заранее.
