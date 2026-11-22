@@ -16,7 +16,7 @@ function makeRequest(messages, options = {}) {
     method: "POST",
     headers: {
       Origin: options.origin || origin,
-      Authorization: options.authorization || "Bearer player-session-token",
+      Authorization: options.authorization ?? "Bearer player-session-token",
       "Content-Type": "application/json"
     },
     body: JSON.stringify({ messages })
