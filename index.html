@@ -7,7 +7,7 @@
 <meta name="description" content="Quantum-AI — интеллектуальный помощник и поиск по интернету.">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./styles.css?v=20261122-disable-sw-3">
+<link rel="stylesheet" href="./styles.css?v=20261122-assistant-tools-4">
 <title>Quantum-AI</title>
 </head>
 <body>
@@ -31,10 +31,6 @@
    <button class="nav-button active" id="chatNav" type="button">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H7l-4 2 1.2-4.1A7.5 7.5 0 1 1 20 11.5Z"/><path d="M8 11h8M8 14h5"/></svg>
     Мои чаты
-   </button>
-   <button class="nav-button" id="webSearchNav" type="button">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="10.8" cy="10.8" r="7.2"/><path d="m16.2 16.2 4.3 4.3M3.8 10.8h14M10.8 3.6c2 2 3 4.4 3 7.2s-1 5.2-3 7.2c-2-2-3-4.4-3-7.2s1-5.2 3-7.2Z"/></svg>
-    Поиск в интернете
    </button>
   </nav>
 
@@ -80,17 +76,17 @@
       <div class="welcome" id="welcome">
        <div class="welcome-mark"><img src="./icon.svg" alt=""></div>
        <h1>Чем займёмся?</h1>
-       <p class="welcome-copy">Общение, идеи, объяснения и поиск информации — в одном спокойном и удобном пространстве.</p>
-       <div class="welcome-state"><i></i> Онлайн-режим · подключение диалога завершается</div>
+       <p class="welcome-copy">Общение, анализ, идеи и поиск актуальной информации — в одном диалоге.</p>
+       <div class="welcome-state"><i></i> Онлайн-режим · инструменты ассистента</div>
        <div class="suggestion-grid">
-        <button class="suggestion" type="button" data-suggestion="web">
+        <div class="suggestion suggestion-static">
          <span class="suggestion-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10.8" cy="10.8" r="7.2"/><path d="m16.2 16.2 4.3 4.3"/></svg></span>
-         <span><strong>Найти в интернете</strong><small>Страницы, статьи и свежие материалы</small></span>
-        </button>
-        <button class="suggestion" type="button" data-suggestion="history">
+         <span><strong>Поиск встроен в диалог</strong><small>Ассистент сам решает, когда нужны актуальные источники</small></span>
+        </div>
+        <div class="suggestion suggestion-static">
          <span class="suggestion-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 5h16v12H8l-4 3V5Z"/><path d="M8 9h8M8 13h5"/></svg></span>
-         <span><strong>Вернуться к разговору</strong><small>Открой сохранённый чат слева</small></span>
-        </button>
+         <span><strong>Один разговор</strong><small>Ответы, поиск и анализ источников в одной переписке</small></span>
+        </div>
        </div>
       </div>
       <div class="thread-messages" id="threadMessages"></div>
@@ -99,12 +95,12 @@
     <div class="composer-wrap">
      <div class="chat-notice" id="chatNotice">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></svg>
-      <span>История чатов и интерфейс уже доступны. Онлайн-сервер диалога ещё не подключён, поэтому отправка сообщений пока выключена. Веб-поиск работает отдельно.</span>
+      <span>Интерфейс и история чатов доступны. Подключение онлайн-модели ещё не завершено. После подключения ассистент сможет сам вызывать веб-поиск внутри разговора, когда это действительно нужно.</span>
      </div>
      <div class="composer" aria-label="Поле сообщения">
       <textarea id="prompt" rows="1" maxlength="8000" placeholder="Онлайн-чат станет доступен после подключения сервиса…" aria-label="Сообщение" disabled></textarea>
       <div class="composer-bottom">
-       <span class="composer-hint">Пока можно искать информацию в интернете</span>
+       <span class="composer-hint">Поиск будет доступен как инструмент ассистента</span>
        <div class="composer-tools">
         <button class="send-button" id="sendBtn" type="button" aria-label="Отправить сообщение" disabled>
          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 14-7-5 14-2-6-7-1Z"/><path d="m12 13 7-8"/></svg>
@@ -115,29 +111,9 @@
     </div>
    </section>
 
-   <section class="view search-page" id="searchView" hidden aria-label="Поиск по интернету">
-    <div class="search-container">
-     <div class="search-intro">
-      <div class="search-symbol"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10.8" cy="10.8" r="7.2"/><path d="m16.2 16.2 4.3 4.3"/></svg></div>
-      <h1>Поиск по интернету</h1>
-      <p>Ищи информацию по открытым веб-страницам, а не только в одной энциклопедии.</p>
-     </div>
-     <form class="search-form" id="searchForm">
-      <input class="search-input" id="webQuery" type="search" placeholder="Что хочешь найти?" autocomplete="off" aria-label="Поисковый запрос" required>
-      <button class="search-submit" id="searchSubmit" type="submit">
-       <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.8" cy="10.8" r="7.2"/><path d="m16.2 16.2 4.3 4.3"/></svg>
-       <span>Найти</span>
-      </button>
-     </form>
-     <div class="search-footnote">Запрос отправляется поисковому сервису. Результаты открывают первоисточники.</div>
-     <div class="search-state" id="searchState"><span>Введи запрос, чтобы начать поиск.</span><span id="searchResultCount"></span></div>
-     <div class="search-results" id="searchResults"></div>
-     <div class="search-empty" id="searchEmpty" hidden>Пока нет результатов. Попробуй изменить формулировку запроса.</div>
-    </div>
-   </section>
   </main>
  </div>
 </div>
-<script type="module" src="./src/app.js?v=20261122-disable-sw-3"></script>
+<script type="module" src="./src/app.js?v=20261122-assistant-tools-4"></script>
 </body>
 </html>
