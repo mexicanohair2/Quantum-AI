@@ -7,6 +7,7 @@ const MAX_HISTORY_MESSAGES = 8;
 const MAX_HISTORY_CHARS = 9000;
 const MAX_MESSAGE_CHARS = 1800;
 const MAX_COMPLETION_TOKENS = 512;
+const VISION_MAX_COMPLETION_TOKENS = 2048;
 const DAILY_NEURON_LIMIT = 10000;
 const INPUT_NEURONS_PER_MILLION = 5500;
 const OUTPUT_NEURONS_PER_MILLION = 36400;
@@ -220,6 +221,10 @@ export function normalizeMessages(input) {
   return normalized;
 }
 
+function completionTokenBudget(model = MODEL) {
+  return model === VISION_MODEL ? VISION_MAX_COMPLETION_TOKENS : MAX_COMPLETION_TOKENS;
+}
+
 function estimateModelNeurons(messages, outputCharacters = 0, model = MODEL, extraInputTokens = 0) {
   const inputCharacters = SYSTEM_PROMPT.length +
     messages.reduce((sum, item) => sum + String(item.content || "").length, 0);
@@ -227,7 +232,7 @@ function estimateModelNeurons(messages, outputCharacters = 0, model = MODEL, ext
   const inputRate = model === VISION_MODEL ? VISION_INPUT_NEURONS_PER_MILLION : INPUT_NEURONS_PER_MILLION;
   const outputRate = model === VISION_MODEL ? VISION_OUTPUT_NEURONS_PER_MILLION : OUTPUT_NEURONS_PER_MILLION;
   const inputTokens = Math.ceil(inputCharacters * 1.2) + extraInputTokens;
-  const outputTokens = Math.min(MAX_COMPLETION_TOKENS, Math.ceil(outputCharacters * 1.2));
+  const outputTokens = Math.min(completionTokenBudget(model), Math.ceil(outputCharacters * 1.2));
   return Math.max(1, Math.ceil(
     inputTokens * inputRate / 1_000_000 +
     outputTokens * outputRate / 1_000_000
@@ -238,10 +243,11 @@ export function estimateReservation(messages, hasImage = false) {
   // Reserve for both the initial model call and a possible second call after web search.
   const model = hasImage ? VISION_MODEL : MODEL;
   const imageTokens = hasImage ? IMAGE_RESERVATION_TOKENS : 0;
-  const firstCall = estimateModelNeurons(messages, MAX_COMPLETION_TOKENS, model, imageTokens);
+  const outputBudget = completionTokenBudget(model);
+  const firstCall = estimateModelNeurons(messages, outputBudget, model, imageTokens);
   const secondCall = estimateModelNeurons(messages.concat([
     { role: "tool", content: "x".repeat(3200) }
-  ]), MAX_COMPLETION_TOKENS, model, imageTokens);
+  ]), outputBudget, model, imageTokens);
   return Math.min(DAILY_NEURON_LIMIT, Math.max(1, firstCall + secondCall));
 }
 
@@ -338,9 +344,12 @@ function responseText(result) {
 async function runModel(env, messages, allowSearch, model = MODEL, extraInputTokens = 0) {
   const options = {
     messages,
-    max_completion_tokens: MAX_COMPLETION_TOKENS,
-    temperature: 0.35
+    max_completion_tokens: completionTokenBudget(model),
+    temperature: model === VISION_MODEL ? 1.0 : 0.35
   };
+  if (model === VISION_MODEL) {
+    options.reasoning_effort = "medium";
+  }
   if (allowSearch) {
     options.tools = [SEARCH_TOOL];
     options.tool_choice = "auto";
