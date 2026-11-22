@@ -29,13 +29,13 @@ https://mexicanohair2.github.io/Quantum-AI/
 - Model tool-calling loop: implemented in source; the model can call `web_search`, receive results, and compose the final answer.
 - Per-player 10,000-neuron daily allowance: implemented in QQCross Supabase with atomic reservations and settlement.
 - Automated backend and browser smoke tests: passing in GitHub Actions on the feature branches.
-- The Qwen vision path has a separate 2,048-token completion budget and medium reasoning effort; its reservation calculation is covered by regression tests.
+- All text, image, and web-search synthesis turns use the same Qwen 3.8 27B model with a 2,048-token completion budget and medium reasoning effort; one model-specific reservation/settlement path covers every turn.
 - QQCross chat UI and Worker client integration are prepared on feature branches.
 - **Live inference is not yet deployed.** The Worker endpoint is configured in the QQCross UI but will remain unavailable until the separate Worker is deployed after billing checks.
 
 ## Backend and cost safety
 
-Text-only turns use Cloudflare-hosted GLM-4.7-Flash. Image turns route to Qwen 3.8 27B, whose Cloudflare model page documents vision and function calling. Model-specific neuron rates are used for reservation and settlement. The Worker uses the built-in AI binding; no provider API key is placed in the browser.
+All inference turns use Cloudflare-hosted Qwen 3.8 27B (`@cf/qwen/qwen3.8-27b`). Cloudflare documents text generation, image input, reasoning, and function calling for this model. The Worker uses Qwen's published rates for both reservation and settlement; GLM is not called. The Worker uses the built-in AI binding; no provider API key is placed in the browser.
 
 QQCross stores an independent 10,000-neuron daily allowance for each confirmed player, keyed by the stable Supabase Auth UUID. Cloudflare still applies its own separate 10,000-neuron daily free allocation to the entire Cloudflare account. Personal player quotas do not create separate Cloudflare free quotas.
 
