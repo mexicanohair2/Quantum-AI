@@ -1,64 +1,77 @@
 # Quantum-AI
 
-Quantum-AI is a free, mobile-first local AI assistant built around the open Qwen model. The current implementation runs inference in the browser; it does not call a paid inference API and does not require an API key.
+Quantum-AI is a mobile-first AI assistant built around the open Qwen model.
+
+## Product direction (current)
+
+**Quantum-AI is moving to online-only inference.** The phone will be a client; Qwen will run on a remote compute service. The target remains free access, no paid API, no user-managed API key, and minimal setup.
+
+The currently published preview still contains the earlier browser-local Qwen prototype. It is **not yet the final online architecture**. Do not mistake the current local model-loading button for a completed online service.
 
 ## Live app
 
 https://mexicanohair2.github.io/Quantum-AI/
 
-## Current implementation
+## Free online hosting research
 
-- **Local model:** onnx-community/Qwen3.5-0.8B-ONNX, using the Qwen3.5 0.8B ONNX weights.
-- **Runtime:** Hugging Face Transformers.js 4.3.2 and ONNX Runtime.
-- **Acceleration:** WebGPU when a compatible adapter is available; otherwise a slower WASM/CPU fallback is attempted.
-- **Chat:** multi-turn context, streamed output and local conversation history.
-- **Vision:** image attachments are passed to the Qwen3.5 vision-language processor.
-- **Files:** TXT, MD, JSON and CSV text attachments.
-- **Voice:** browser speech recognition for dictation (browser/device dependent) and device speech synthesis for reading the last answer.
-- **Search:** optional no-key search over Wikipedia with source links.
-- **PWA shell:** the app shell is cached by a service worker. Model and runtime files are cached by the browser/runtime where supported.
+The most promising candidate found so far is Hugging Face Spaces ZeroGPU:
 
-## First launch
+- Hugging Face documents free ZeroGPU hosting for eligible personal accounts, with up to two Spaces for free accounts in good standing (verified email and account older than 30 days).
+- Free visitors receive a daily GPU quota of 5 minutes when signed in; unauthenticated visitors receive 2 minutes. Queue priority and availability are not guaranteed.
+- A free ZeroGPU Space can run a model on remote GPU hardware, so inference is online rather than on the phone.
+- This is a limited free tier, **not unlimited always-available compute**.
+- Standard Gradio/Docker CPU Spaces are not a reliable no-cost fallback for new free accounts under the current hosting rules.
 
-1. Open the live app in a current Android Chrome browser.
-2. Press **Загрузить модель**.
-3. Allow the initial model download to finish. The selected quantized ONNX artifacts are roughly 0.7 GB in total; keep at least 1.5 GB of free space and preferably use Wi-Fi.
-4. After the model is loaded, send a message. Generation is local on the device.
+Official references:
+- https://huggingface.co/docs/hub/spaces-zerogpu
+- https://huggingface.co/docs/hub/spaces-overview
+- https://huggingface.co/pricing
 
-The model is not included in the GitHub repository. It is downloaded directly from Hugging Face the first time. No login or API token is needed for the public model files.
+No provider has yet been connected to the Quantum-AI frontend. The ZeroGPU path must be validated with the chosen Qwen model, browser-to-Space calls, visitor quota behavior, cold starts, and mobile use before it is treated as implemented.
 
-## Offline and privacy behavior
+## Non-negotiable constraints
 
-- The first model and runtime download requires internet access.
-- After a successful download, local generation can work offline while the browser retains the cached model/runtime files.
-- Browser storage is subject to eviction by the operating system/browser. If the cache is removed, the model must be downloaded again.
-- Wikipedia search and browser speech recognition may use the internet. The normal local chat does not send the prompt to an inference server.
-- Conversation history is stored in this browser's local storage. It is not synchronized between devices.
+- No paid hosting, subscriptions, API usage charges, or payment cards.
+- No API key that the user has to obtain, paste, or manage.
+- Do not put privileged secrets in browser JavaScript or GitHub Pages.
+- Do not claim unlimited free usage when the provider has daily quotas, queues, sleep, or rate limits.
+- Qwen remains the model family; identify its model and license honestly.
+- Keep the user-facing setup simple and phone-friendly.
+- Keep Quantum-AI separate from QQCross.
 
-## Important limitations
+## Planned online architecture
 
-- Qwen3.5-0.8B is a compact model intended for lightweight use and prototyping. It is not equivalent in capability to a large cloud Qwen model.
-- Device-specific speed, thermal behavior, storage persistence, WebGPU support and vision inference must be checked on the actual phone. The code has not yet been validated on every Android browser.
-- PDF, DOCX, video understanding, account sync, vector memory and external website crawling are not implemented yet.
-- Wikipedia search is a limited free search source, not a complete web search engine.
-- Browser speech recognition is controlled by the browser and may rely on a network service. It is not guaranteed to work offline.
-- The app does not claim to be an independently trained model. It openly identifies Qwen as its language model.
+1. GitHub Pages serves the static Quantum-AI interface.
+2. A free remote inference host runs the Qwen model.
+3. The browser sends chat requests to that host over HTTPS.
+4. The remote host returns streamed answers where supported.
+5. Conversation history and user-controlled memory are designed separately from the inference provider.
+6. Optional search, files, vision and voice are added only when their online data flow, privacy, cost and free-tier limits are clear.
 
-## Model and runtime
+## Existing prototype (historical implementation)
 
-- Model: https://huggingface.co/onnx-community/Qwen3.5-0.8B-ONNX
-- Model license: Apache-2.0, as shown on the model card.
-- Runtime: https://github.com/huggingface/transformers.js
-- Runtime package: https://www.npmjs.com/package/@huggingface/transformers
+The current deployed preview includes:
+- Qwen3.5-0.8B ONNX running inside the browser via Transformers.js.
+- WebGPU with a WASM/CPU fallback attempt.
+- Local multi-turn chat history and export.
+- Image and TXT/MD/JSON/CSV attachments.
+- Browser speech input/output.
+- Keyless Wikipedia search.
+- PWA app-shell caching.
 
-Keep the model attribution and license notices intact when redistributing model weights. The ONNX export is a community conversion of Qwen weights, not a new model trained by this repository.
+This local inference implementation is a prototype and is no longer the target product direction. Keep it clearly labelled as a prototype until the online backend replaces it.
 
-## Development and checks
+## Current status and release gate
 
-The application is a static site: no server, API key, backend, Node.js setup or local build is required for the user.
+- Static frontend and GitHub Pages deployment: implemented.
+- JavaScript syntax and static regression checks: passing in GitHub Actions at the last verified run.
+- Online Qwen backend: not connected yet.
+- ZeroGPU model compatibility and API integration: not yet tested.
+- Free quota, queue and sleep behavior: must be tested and disclosed in the interface.
+- Real-device mobile testing: pending.
 
-The repository includes a lightweight static validation script. GitHub Actions runs the script and JavaScript syntax checks on pushes to main.
+Do not mark Quantum-AI as online-ready until a real request from the deployed GitHub Pages site reaches the remote Qwen backend and returns an answer without a paid key or hidden charge.
 
-## Project direction
+## Model attribution
 
-The immediate goal is a reliable free local assistant with a simple phone-first interface. Future modules (better document parsing, more capable local model options, stronger memory, expanded free search and optional integrations) are added only after their costs, licenses, device requirements and actual behavior are checked.
+Quantum-AI is the application/product name. Qwen is the current language model family. Do not present Qwen weights as independently trained Quantum-AI weights. Preserve the model's license and attribution notices.
