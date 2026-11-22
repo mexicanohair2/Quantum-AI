@@ -34,7 +34,7 @@ assert.ok(sw.includes("self.registration.unregister()"));
 assert.ok(sw.includes("caches.delete"));
 assert.ok(!sw.includes("addAll("));
 assert.ok(manifest.includes("Quantum-AI"));
-assert.ok(readme.includes("per-player"));
+assert.ok(readme.toLowerCase().includes("per-player"));
 assert.ok(readme.includes("10,000-neuron"));
 assert.ok(architecture.includes("QQCross"));
 assert.ok(architecture.includes("10 000 нейронов"));
