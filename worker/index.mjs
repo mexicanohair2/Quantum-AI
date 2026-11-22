@@ -411,7 +411,14 @@ export async function handleChat(request, env, user) {
         throw new HttpError(502, "Модель запросила неподдерживаемый инструмент.");
       }
       const args = parseToolArguments(call.arguments ?? call.function?.arguments);
-      const search = await searchWeb(args.query, args.topic);
+      let search;
+      let searchError = null;
+      try {
+        search = await searchWeb(args.query, args.topic);
+      } catch (error) {
+        searchError = error instanceof Error ? error.message : "Веб-поиск временно недоступен.";
+        search = { query: String(args.query || "").trim().slice(0, 240), results: [], error: searchError };
+      }
       const toolCallId = String(call.id || "quantum_web_search_1").slice(0, 80);
       const toolMessages = [
         ...modelMessages,
@@ -436,7 +443,12 @@ export async function handleChat(request, env, user) {
       const reply = responseText(finalCall.result);
       if (!reply) throw new HttpError(502, "Модель не смогла подготовить итоговый ответ.");
       const sources = search.results.map(({ title, url, publishedDate }) => ({ title, url, publishedDate }));
-      responseBody = { reply, sources, model: MODEL };
+      responseBody = {
+        reply,
+        sources,
+        model: MODEL,
+        ...(searchError ? { searchWarning: searchError } : {})
+      };
     }
   } catch (error) {
     operationError = error;
