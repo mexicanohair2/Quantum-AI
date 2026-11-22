@@ -1,6 +1,6 @@
 # Quantum-AI
 
-Quantum-AI is designed as one online AI chat. The user sends a normal message; the assistant decides when it needs external tools such as web search.
+Quantum-AI is the assistant planned for integration into QQCross, replacing the current encyclopedia experience. It uses the player's existing, email-confirmed QQCross account.
 
 ## Live app
 
@@ -20,7 +20,7 @@ https://mexicanohair2.github.io/Quantum-AI/
 - Message field and send button: enabled.
 - Server-side Worker implementation: prepared in `worker/index.mjs`.
 - Model tool-calling loop: implemented in source; the model can call `web_search`, receive results, and compose the final answer.
-- Global daily usage guard: implemented in the Worker using a SQLite-backed Durable Object, with a conservative Quantum-AI budget reservation.
+- Per-player 10,000-neuron daily allowance: implemented in QQCross Supabase with atomic reservations and settlement.
 - Automated backend smoke tests: added.
 - **Live inference is not yet deployed or connected.** The frontend endpoint remains unset, so the interface does not fabricate answers.
 
@@ -28,9 +28,9 @@ https://mexicanohair2.github.io/Quantum-AI/
 
 The planned inference model is Cloudflare-hosted GLM-4.7-Flash. Cloudflare documents multilingual dialogue, function calling, and availability on Workers Free. The Worker uses the built-in AI binding; no provider API key is placed in the browser.
 
-The Worker reserves estimated usage against a 5,000-Neuron daily Quantum-AI budget. This is an application-level guard, not an account-wide Cloudflare spending limit. The Cloudflare 10,000-Neuron allocation is shared across all Workers AI use in the account. Another Worker can consume part of that allocation.
+QQCross stores an independent 10,000-neuron daily allowance for each confirmed player, keyed by the stable Supabase Auth UUID. Cloudflare still applies its own separate 10,000-neuron daily free allocation to the entire Cloudflare account. Personal player quotas do not create separate Cloudflare free quotas.
 
-The connected Cloudflare account's billing plan and current account-wide AI usage could not be verified with the available permissions. A separate legacy Worker named `qq-ai-cloud-api` already exists and has an AI binding; it belongs to the separate QQ-AI project and must not be modified or reused. Therefore, the new Worker has not been deployed and inference has not been activated. Do not treat the daily application guard as a guarantee against charges from other account workloads.
+The connected Cloudflare OAuth session cannot read Billing Profile or subscriptions: Cloudflare returned 403 because this OAuth connection has no Billing Read scope. A separate legacy Worker named `qq-ai-cloud-api` already exists and has an AI binding; it belongs to the separate QQ-AI project and must not be modified or reused. Therefore, the new Worker has not been deployed and inference has not been activated. Do not treat the daily application guard as a guarantee against charges from other account workloads.
 
 ## Privacy
 
@@ -44,6 +44,6 @@ The connected Cloudflare account's billing plan and current account-wide AI usag
 - Clean chat-first UI: implemented in source.
 - Browser history persistence: implemented.
 - Worker backend source and automated tests: implemented in repository.
-- Cloudflare deployment and endpoint connection: pending billing/usage verification.
-- End-to-end live inference and search: pending deployment.
+- Cloudflare deployment and endpoint connection: pending Billing Read access and secure Worker secret configuration.
+- QQCross encyclopedia replacement UI and end-to-end live inference: not yet integrated.
 - Real Android-device testing: pending.
