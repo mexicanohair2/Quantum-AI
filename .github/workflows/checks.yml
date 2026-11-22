@@ -5,10 +5,12 @@ on:
     branches: [main]
     paths:
       - 'index.html'
+      - 'styles.css'
       - 'src/**'
       - 'sw.js'
       - 'manifest.webmanifest'
       - 'scripts/**'
+      - 'tests/**'
       - 'README.md'
       - 'docs/**'
       - '.github/workflows/checks.yml'
@@ -28,8 +30,25 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           node --check src/app.js
+          node --check src/web-search.js
           node --check src/quantum-engine.js
           node --check sw.js
           node --check scripts/validate.mjs
+          node --check tests/ui-smoke.mjs
       - name: Run static regression checks
         run: node scripts/validate.mjs
+      - name: Install browser test runtime
+        run: |
+          npm init -y
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: Run browser smoke test
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/quantum-ai-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID' EXIT
+          for attempt in $(seq 1 20); do
+            if curl -fsS http://127.0.0.1:4173/ > /dev/null; then break; fi
+            sleep 1
+          done
+          node tests/ui-smoke.mjs
