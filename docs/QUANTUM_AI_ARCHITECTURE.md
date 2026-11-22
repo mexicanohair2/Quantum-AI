@@ -17,7 +17,7 @@
 - ONNX model: onnx-community/Qwen3.5-0.8B-ONNX.
 - Runtime: @huggingface/transformers 4.3.2.
 - Model class: Qwen3_5ForConditionalGeneration with AutoProcessor.
-- Quantization: q4 for embedding, decoder and vision encoder.
+- Quantization: q4 for embedding and decoder; fp16 for the vision encoder, following the model-card example.
 - Preferred execution: WebGPU when navigator.gpu.requestAdapter() succeeds.
 - Fallback: ONNX Runtime WASM/CPU. This may be substantially slower and can fail on constrained devices.
 - Model artifacts are downloaded from the public Hugging Face Hub at first launch. No API token is required for the public model.
@@ -27,7 +27,7 @@ The model card documents the ONNX Transformers.js integration, Qwen3.5 multimoda
 ## 3. Device strategy
 
 1. Detect a usable WebGPU adapter at runtime instead of trusting the device name.
-2. Use q4 weights to reduce memory and download requirements.
+2. Use q4 weights for embedding and decoder; keep the vision encoder at fp16 as shown in the model-card example.
 3. If WebGPU loading fails, attempt WASM as a slower fallback.
 4. Show a clear loading/progress state and a clear error when both routes fail.
 5. Keep the first-run download warning visible (roughly 0.7 GB of selected q4 artifacts; exact transfer depends on runtime and model repository revisions).
