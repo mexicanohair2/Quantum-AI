@@ -2,9 +2,11 @@
 
 Quantum-AI is the assistant planned for integration into QQCross, replacing the current encyclopedia experience. It uses the player's existing, email-confirmed QQCross account.
 
-## Live app
+## Product entry
 
-https://mexicanohair2.github.io/Quantum-AI/
+Quantum-AI is available only inside QQCross. The standalone Pages entry redirects to the QQCross app:
+
+https://mexicanohair2.github.io/QQCross/
 
 ## Product behavior
 
@@ -22,7 +24,7 @@ https://mexicanohair2.github.io/Quantum-AI/
 - Model tool-calling loop: implemented in source; the model can call `web_search`, receive results, and compose the final answer.
 - Per-player 10,000-neuron daily allowance: implemented in QQCross Supabase with atomic reservations and settlement.
 - Automated backend smoke tests: added.
-- **Live inference is not yet deployed or connected.** The frontend endpoint remains unset, so the interface does not fabricate answers.
+- **Live inference is not yet deployed or connected.** The QQCross UI remains on a draft feature branch, and the Worker has not been deployed. Do not treat this repository's Pages redirect as an AI chat.
 
 ## Backend and cost safety
 
@@ -45,5 +47,5 @@ The connected Cloudflare OAuth session cannot read Billing Profile or subscripti
 - Browser history persistence: implemented.
 - Worker backend source and automated tests: implemented in repository.
 - Supabase quota Edge Function: deployed with JWT verification. Cloudflare Worker deployment and QQCross UI connection: pending Billing Read verification.
-- QQCross encyclopedia replacement UI and end-to-end live inference: not yet integrated.
+- QQCross encyclopedia replacement UI: prepared on a draft feature branch. End-to-end live inference: not yet verified.
 - Real Android-device testing: pending.
