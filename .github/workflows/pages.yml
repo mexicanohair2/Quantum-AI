@@ -5,6 +5,12 @@ on:
     branches: [main]
     paths:
       - 'index.html'
+      - 'src/**'
+      - 'sw.js'
+      - 'manifest.webmanifest'
+      - 'icon.svg'
+      - 'scripts/**'
+      - 'README.md'
       - 'docs/**'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
