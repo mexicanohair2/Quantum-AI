@@ -175,9 +175,6 @@ function openChat(id) {
 }
 
 async function requestAssistantReply(messages) {
-  if (!CHAT_API_URL) {
-    throw new Error("Ответы пока недоступны: сервер ИИ ещё не подключён.");
-  }
   const response = await fetch(CHAT_API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -194,6 +191,10 @@ async function sendMessage() {
   const text = input.value.trim();
   if (!text) return;
   clearError();
+  if (!CHAT_API_URL) {
+    showError("Ответы пока недоступны: сервер ИИ ещё не подключён.");
+    return;
+  }
   const chat = ensureChat();
   const userMessage = { role: "user", content: text };
   input.value = "";
