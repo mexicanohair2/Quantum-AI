@@ -30,8 +30,8 @@ https://mexicanohair2.github.io/Quantum-AI/
 - Per-player 10,000-neuron daily allowance: implemented in QQCross Supabase with atomic reservations and settlement.
 - Automated backend and browser smoke tests: passing in GitHub Actions run #104, including recovery when web search returns an HTTP error.
 - All text, image, and web-search synthesis turns use the same Qwen 3.8 27B model with a 2,048-token completion budget and medium reasoning effort; one model-specific reservation/settlement path covers every turn.
-- QQCross chat UI and Worker client integration are prepared on feature branches.
-- **Worker deployed; QQCross end-to-end release pending.** The dedicated Worker `quantum-ai-chat-api` is deployed at `https://quantum-ai-chat-api.qq-ai-cloud.workers.dev` with its own AI binding and Supabase configuration. A direct live Qwen inference test returned the correct result for `17 × 19` (323), consuming 94.6 Neurons. The legacy `qq-ai-cloud-api` was not changed. The QQCross UI release and authenticated browser round-trip remain to be verified.
+- QQCross chat UI and Worker client integration are merged into `main` (QQCross PR #110, merge `33971ca3a471deae6dedc04a70105e5008423c61`). GitHub Pages deployment completed successfully (run `45085068113`).
+- **Worker and QQCross UI are deployed.** The dedicated Worker `quantum-ai-chat-api` is deployed at `https://quantum-ai-chat-api.qq-ai-cloud.workers.dev`, its workers.dev subdomain is enabled, and its AI binding and Supabase configuration are verified. QQCross PR #110 is merged and the Pages deployment succeeded. The Supabase quota Edge Function is ACTIVE, all three neuron quota migrations are applied, and the balance RPC returns the expected default quota. A direct live Qwen inference test returned `323` for `17 × 19`, using 94.6 Neurons. The authenticated browser round-trip and Android-device test still require a real signed-in QQCross session.
 
 ## Backend and cost safety
 
@@ -53,8 +53,8 @@ The connected Cloudflare OAuth session cannot read Billing Profile or subscripti
 - Clean chat-first UI: implemented in source.
 - Browser history persistence: implemented.
 - Worker backend source and automated tests: implemented in repository.
-- Supabase quota Edge Function: deployed with JWT verification. Cloudflare Worker deployment: complete. QQCross UI connection: configured for the dedicated Worker; production Pages release and authenticated end-to-end verification remain pending.
-- QQCross encyclopedia replacement UI: implemented on branch `feature/quantum-ai-chat`; PR #110 is draft and its mobile/desktop browser checks passed.
+- Supabase quota Edge Function: ACTIVE with JWT verification; neuron quota migrations applied and balance RPC verified. Cloudflare Worker deployment: complete. QQCross UI: merged into `main`; GitHub Pages deployment succeeded. Authenticated end-to-end browser and Android-device verification remain pending.
+- QQCross encyclopedia replacement UI: merged through PR #110. Mobile and desktop Playwright browser suites passed before merge.
 - Qwen-only Quantum-AI backend (text, image, web-search tool cycle): implemented on branch `feature/qwen-single-model`; PR #3 is draft and GitHub Actions run #104 passed syntax, static, backend, and browser smoke checks. It also verifies that a temporary web-search outage is returned to Qwen for an honest answer rather than aborting the entire request.
-- Dedicated Cloudflare Worker deployment: complete. A real direct Qwen 3.8 27B inference returned `323` for `17 × 19`; usage metadata reported 94.6 Neurons. Billing Read remains unavailable through OAuth, so account plan and any other account-wide consumption cannot be verified. The authenticated QQCross browser round-trip remains pending.
+- Dedicated Cloudflare Worker deployment: complete. A real direct Qwen 3.8 27B inference returned `323` for `17 × 19`; usage metadata reported 94.6 Neurons. Billing Read remains unavailable through OAuth, so account plan and other account-wide consumption cannot be verified. The app itself performs a Worker health check and then fetches the signed-in player's balance; the authenticated request/response round-trip still needs a real user session.
 - Real Android-device testing: pending.
