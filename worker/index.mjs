@@ -101,68 +101,72 @@ async function authenticatePlayer(request, env) {
   return user;
 }
 
-async function supabaseRpc(env, name, body) {
-  const supabaseUrl = requiredEnv(env, "SUPABASE_URL").replace(/\/+$/, "");
-  const serviceKey = requiredEnv(env, "SUPABASE_SERVICE_ROLE_KEY");
-  let response;
-  try {
-    response = await fetch(supabaseUrl + "/rest/v1/rpc/" + name, {
-      method: "POST",
-      headers: {
-        apikey: serviceKey,
-        Authorization: "Bearer " + serviceKey,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(body)
-    });
-  } catch (_) {
-    throw new HttpError(503, "Не удалось связаться с сервером аккаунтов QQCross.");
+async function quotaFunctionRequest(request, env, action, payload = {}) {
+  const authorization = request.headers.get("Authorization") || "";
+  if (!authorization.startsWith("Bearer ")) {
+    throw new HttpError(401, "Войди в аккаунт QQCross, чтобы пользоваться ИИ.");
   }
 
-  if (!response.ok) {
-    throw new HttpError(503, "Не удалось обновить личный лимит нейронов. Попробуй позже.");
+  const supabaseUrl = requiredEnv(env, "SUPABASE_URL").replace(/\/+$/, "");
+  const publishableKey = requiredEnv(env, "SUPABASE_PUBLISHABLE_KEY");
+  let response;
+  try {
+    response = await fetch(supabaseUrl + "/functions/v1/qqcross-ai-neuron-quota", {
+      method: "POST",
+      headers: {
+        apikey: publishableKey,
+        Authorization: authorization,
+        Origin: ALLOWED_ORIGIN,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ action, ...payload })
+    });
+  } catch (_) {
+    throw new HttpError(503, "Не удалось связаться с сервером квот QQCross.");
   }
-  const data = await response.json();
-  return Array.isArray(data) ? data[0] : data;
+
+  let data = {};
+  try { data = await response.json(); } catch (_) {}
+  if (!response.ok) {
+    const message = typeof data.error === "string" ? data.error : "Не удалось проверить личный лимит ИИ.";
+    if (response.status === 429) throw new HttpError(429, message);
+    if (response.status === 401 || response.status === 403) throw new HttpError(response.status, message);
+    throw new HttpError(503, message);
+  }
+  return data;
 }
 
 function quotaView(row) {
   return {
-    used: Number(row?.neurons_used || 0),
-    reserved: Number(row?.neurons_reserved || 0),
-    remaining: Number(row?.neurons_remaining ?? DAILY_NEURON_LIMIT),
-    limit: Number(row?.daily_limit || DAILY_NEURON_LIMIT),
-    resetsAt: row?.resets_at || null
+    used: Number(row?.used ?? row?.neurons_used ?? 0),
+    reserved: Number(row?.reserved ?? row?.neurons_reserved ?? 0),
+    remaining: Number(row?.remaining ?? row?.neurons_remaining ?? DAILY_NEURON_LIMIT),
+    limit: Number(row?.limit ?? row?.daily_limit ?? DAILY_NEURON_LIMIT),
+    resetsAt: row?.resetsAt ?? row?.resets_at ?? null
   };
 }
 
-async function reservePlayerNeurons(env, userId, amount) {
-  const row = await supabaseRpc(env, "reserve_qqcross_ai_neurons", {
-    p_user_id: userId,
-    p_neurons: amount
-  });
-  if (!row?.allowed || !row?.reservation_id) {
-    const quota = quotaView(row);
-    throw new HttpError(429, "На сегодня лимит ИИ исчерпан. Он обновится в 00:00 UTC. Осталось: " + quota.remaining + " нейронов.");
+async function reservePlayerNeurons(request, env, amount) {
+  const result = await quotaFunctionRequest(request, env, "reserve", { neurons: amount });
+  if (!result?.allowed || !result?.reservationId) {
+    const quota = quotaView(result?.quota);
+    throw new HttpError(429, "На сегодня личный лимит ИИ исчерпан. Осталось: " + quota.remaining + " нейронов.");
   }
-  return { id: row.reservation_id, quota: quotaView(row), amount };
+  return { id: result.reservationId, quota: quotaView(result.quota), amount };
 }
 
-async function settlePlayerNeurons(env, userId, reservationId, actual) {
-  const row = await supabaseRpc(env, "settle_qqcross_ai_neurons", {
-    p_user_id: userId,
-    p_reservation_id: reservationId,
-    p_actual_neurons: Math.max(0, Math.ceil(actual))
+async function settlePlayerNeurons(request, env, reservationId, actual) {
+  const result = await quotaFunctionRequest(request, env, "settle", {
+    reservationId,
+    actualNeurons: Math.max(0, Math.ceil(actual))
   });
-  if (!row?.settled) throw new HttpError(503, "Не удалось сохранить расход нейронов.");
-  return quotaView(row);
+  if (!result?.settled) throw new HttpError(503, "Не удалось сохранить расход нейронов.");
+  return quotaView(result.quota);
 }
 
-async function getPlayerNeurons(env, userId) {
-  const row = await supabaseRpc(env, "get_qqcross_ai_neuron_balance", {
-    p_user_id: userId
-  });
-  return quotaView(row);
+async function getPlayerNeurons(request, env) {
+  const result = await quotaFunctionRequest(request, env, "balance");
+  return quotaView(result.quota);
 }
 
 export function normalizeMessages(input) {
@@ -343,7 +347,7 @@ export async function handleChat(request, env, user) {
 
   const messages = normalizeMessages(body.messages);
   const modelMessages = [{ role: "system", content: SYSTEM_PROMPT }, ...messages];
-  const reservation = await reservePlayerNeurons(env, user.id, estimateReservation(messages));
+  const reservation = await reservePlayerNeurons(request, env, estimateReservation(messages));
   let actual = 0;
   let responseBody = null;
   let operationError = null;
@@ -400,7 +404,7 @@ export async function handleChat(request, env, user) {
     operationError = error;
   }
 
-  const quota = await settlePlayerNeurons(env, user.id, reservation.id, actual);
+  const quota = await settlePlayerNeurons(request, env, reservation.id, actual);
   if (operationError) throw operationError;
   return { ...responseBody, quota };
 }
@@ -421,7 +425,7 @@ export default {
     try {
       if (request.method === "GET" && url.pathname === "/api/balance") {
         const user = await authenticatePlayer(request, env);
-        const quota = await getPlayerNeurons(env, user.id);
+        const quota = await getPlayerNeurons(request, env);
         return json({ quota });
       }
 
