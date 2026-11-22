@@ -11,7 +11,7 @@ https://mexicanohair2.github.io/Quantum-AI/
 - One chat screen: conversation and message composer.
 - Chat history is available in the side panel.
 - No separate search page, service-status banner, export/clear buttons, or decorative information cards.
-- The assistant answers directly when it can and calls `web_search` only when current or externally verifiable information is needed.
+- The assistant answers directly when it can and uses model-controlled web search only when current or externally verifiable information is needed.
 - Search is an internal assistant tool, not a separate user-facing mode.
 
 ## Implementation status
