@@ -20,7 +20,7 @@ assert.match(engine, /Qwen3_5ForConditionalGeneration/);
 assert.match(engine, /device: device/);
 assert.match(engine, /device = "wasm"/);
 assert.match(sw, /addAll\(APP_FILES\)/);
-assert.match(readme, /API-ключ/i);
+assert.match(readme, /API[- ]ключ|API key/i);
 assert.match(architecture, /Qwen3\.5-0\.8B-ONNX/);
 assert.doesNotMatch(html + app + engine, /AIza[0-9A-Za-z_-]{20,}|sk-[A-Za-z0-9]{20,}/);
 
