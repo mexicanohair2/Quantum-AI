@@ -3,55 +3,141 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#100b12">
-<meta name="description" content="Quantum-AI — интеллектуальный помощник.">
+<meta name="theme-color" content="#1a0a10">
+<meta name="description" content="Quantum-AI — интеллектуальный помощник и поиск по интернету.">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="./styles.css?v=20261122-qq-workspace-1">
 <title>Quantum-AI</title>
-<style>
-:root{color-scheme:dark;--bg:#100b12;--panel:#1b1420;--panel2:#241a29;--line:#3b2b40;--text:#f4edf5;--muted:#a99baa;--accent:#c58aa8;--accent2:#9274b1;--good:#82b99c}
-*{box-sizing:border-box}html,body{height:100%;margin:0}body{background:radial-gradient(ellipse at 50% -18%,#4b2c48 0,transparent 48%),var(--bg);color:var(--text);font:15px/1.55 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
-button,textarea{font:inherit}button{cursor:pointer}.app{height:100%;min-height:0;max-width:1080px;margin:auto;padding:0 20px;display:flex;flex-direction:column}
-header{height:72px;flex:none;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #ffffff12}
-.brand{display:flex;align-items:center;gap:12px}.logo{width:42px;height:42px;border-radius:15px;display:grid;place-items:center;background:linear-gradient(145deg,#a76888,#4b3158);box-shadow:inset 0 1px 0 #ffffff50,0 8px 24px #0006;font-weight:850;font-size:20px;letter-spacing:-2px}.brand-name{font-size:17px;font-weight:760;letter-spacing:.015em}.brand-sub{font-size:11px;color:var(--muted)}
-.header-actions{display:flex;gap:8px}.icon-btn{width:38px;height:38px;border:1px solid var(--line);border-radius:12px;background:#211825;color:#d5c5d8;display:grid;place-items:center}
-main{flex:1;min-height:0;display:flex;flex-direction:column}.chat{flex:1;min-height:0;overflow:auto;padding:28px 4px 20px;scroll-behavior:smooth}
-.welcome{max-width:650px;margin:7vh auto 0;text-align:center}.orb{width:76px;height:76px;border-radius:25px;margin:0 auto 20px;display:grid;place-items:center;background:linear-gradient(145deg,#77475f,#392843);border:1px solid #b77d9c66;box-shadow:0 18px 55px #0007,inset 0 1px 0 #ffffff40;font-size:30px;font-weight:850;letter-spacing:-3px}
-h1{font-size:clamp(29px,6vw,42px);letter-spacing:-.045em;margin:0 0 9px}.intro{max-width:480px;margin:0 auto;color:var(--muted);font-size:14px}
-.online-card{max-width:490px;margin:28px auto 0;padding:17px 19px;text-align:left;border:1px solid #5a4057;border-radius:18px;background:linear-gradient(135deg,#291d2b,#1a1420);box-shadow:0 16px 45px #0003}
-.card-head{display:flex;align-items:center;gap:10px;font-weight:700;font-size:13px}.pulse-dot{width:8px;height:8px;border-radius:50%;background:#d0a0b7;box-shadow:0 0 0 5px #d0a0b71c;flex:none}.card-copy{color:var(--muted);font-size:12px;margin:8px 0 0 18px}
-.messages{max-width:790px;margin:0 auto;display:flex;flex-direction:column;gap:16px}.message{display:flex;gap:10px;align-items:flex-start}.message.user{flex-direction:row-reverse}.avatar{width:31px;height:31px;flex:none;border-radius:11px;display:grid;place-items:center;background:linear-gradient(145deg,#75445f,#3e2a4b);font-size:11px;font-weight:800}.message.user .avatar{background:#4a3043}.bubble{max-width:min(88%,700px);padding:11px 14px;border:1px solid var(--line);border-radius:4px 15px 15px 15px;background:var(--panel);white-space:pre-wrap;overflow-wrap:anywhere}.message.user .bubble{border-radius:15px 4px 15px 15px;background:#392536;border-color:#604054}
-.composer-wrap{flex:none;padding:12px 0 max(16px,env(safe-area-inset-bottom))}.composer{max-width:790px;margin:auto;border:1px solid #4a354b;background:#1c1520;border-radius:18px;padding:9px 10px 9px 15px;box-shadow:0 12px 36px #0004;opacity:.78}textarea{width:100%;min-height:42px;max-height:130px;resize:none;padding:9px 2px;border:0;outline:0;background:transparent;color:var(--text)}textarea::placeholder{color:#9a899b}.composer-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px}.composer-note{font-size:10px;color:#958598}.send{width:38px;height:38px;border:0;border-radius:12px;background:linear-gradient(145deg,#a76583,#684b7f);color:white;display:grid;place-items:center;opacity:.45}.footer-note{text-align:center;color:#807384;font-size:10px;margin-top:8px}
-.notice{max-width:790px;margin:0 auto;color:var(--muted);font-size:11px;text-align:center;min-height:16px}[hidden]{display:none!important}
-@media(max-width:600px){.app{padding:0 12px}header{height:64px}.brand-name{font-size:16px}.chat{padding-top:18px}.welcome{margin-top:5vh}.orb{width:68px;height:68px}.online-card{margin-top:22px;padding:15px}.composer{border-radius:16px}}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
-</style>
 </head>
 <body>
-<div class="app">
-<header>
- <div class="brand"><div class="logo">Q</div><div><div class="brand-name">Quantum-AI</div><div class="brand-sub">Ваш интеллектуальный помощник</div></div></div>
- <div class="header-actions">
-  <button class="icon-btn" id="exportBtn" title="Экспортировать диалог" aria-label="Экспортировать диалог"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 3v12m-4-4 4 4 4-4M5 17v4h14v-4"/></svg></button>
-  <button class="icon-btn" id="clearBtn" title="Очистить диалог" aria-label="Очистить диалог"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m4 4v6m5-6v6"/></svg></button>
- </div>
-</header>
-<main>
- <section class="chat" id="chat" aria-live="polite">
-  <div class="welcome" id="welcome">
-   <div class="orb">Q</div><h1>Quantum-AI</h1>
-   <p class="intro">Один помощник для идей, знаний и повседневных задач.</p>
-   <div class="online-card"><div class="card-head"><span class="pulse-dot"></span>Онлайн-подключение настраивается</div><p class="card-copy">Сейчас мы готовим удалённый интеллектуальный движок. Скачивать модели на телефон не потребуется. Чат станет доступен после подключения сервера.</p></div>
+<div class="app-shell">
+ <div class="mobile-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+ <aside class="sidebar" id="sidebar" aria-label="Боковая панель">
+  <div class="sidebar-brand">
+   <img class="brand-icon" src="./icon.svg" alt="">
+   <div class="brand-copy"><div class="brand-name">Quantum-AI</div><div class="brand-caption">Интеллектуальное пространство</div></div>
+   <button class="icon-button mobile-close" id="closeSidebarBtn" type="button" aria-label="Закрыть панель">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg>
+   </button>
   </div>
-  <div class="messages" id="messages"></div>
- </section>
- <div class="notice" id="notice" role="status"></div>
- <div class="composer-wrap">
-  <div class="composer"><textarea id="prompt" rows="1" maxlength="8000" placeholder="Онлайн-чат скоро будет доступен…" aria-label="Сообщение" disabled></textarea>
-   <div class="composer-bottom"><span class="composer-note">Подключение к сервису ещё не завершено</span><button class="send" id="sendBtn" aria-label="Отправить" disabled><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 14-7-5 14-2-6-7-1Z"/><path d="m12 13 7-8"/></svg></button></div>
-  </div><div class="footer-note">Quantum-AI · Онлайн-версия в разработке</div>
+
+  <button class="primary-button" id="newChatBtn" type="button">
+   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+   Новый чат
+  </button>
+
+  <nav class="nav-stack" aria-label="Разделы">
+   <button class="nav-button active" id="chatNav" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H7l-4 2 1.2-4.1A7.5 7.5 0 1 1 20 11.5Z"/><path d="M8 11h8M8 14h5"/></svg>
+    Мои чаты
+   </button>
+   <button class="nav-button" id="webSearchNav" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="10.8" cy="10.8" r="7.2"/><path d="m16.2 16.2 4.3 4.3M3.8 10.8h14M10.8 3.6c2 2 3 4.4 3 7.2s-1 5.2-3 7.2c-2-2-3-4.4-3-7.2s1-5.2 3-7.2Z"/></svg>
+    Поиск в интернете
+   </button>
+  </nav>
+
+  <div class="sidebar-label"><span>История чатов</span><span class="count-label" id="historyCount">0</span></div>
+  <label class="chat-filter">
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10.8" cy="10.8" r="7.2"/><path d="m16.2 16.2 4.3 4.3"/></svg>
+   <input id="chatFilter" type="search" placeholder="Найти чат…" autocomplete="off" aria-label="Поиск по истории чатов">
+  </label>
+  <div class="history-list" id="chatHistory" aria-live="polite"></div>
+
+  <div class="sidebar-bottom">
+   <div class="storage-note">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 8h8M8 12h8M8 16h4"/></svg>
+    История хранится в этом браузере
+   </div>
+  </div>
+ </aside>
+
+ <div class="main-shell">
+  <header class="topbar">
+   <button class="icon-button menu-button" id="menuBtn" type="button" aria-label="Открыть боковую панель">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+   </button>
+   <div class="topbar-title">
+    <div class="topbar-kicker" id="viewKicker">ЛИЧНОЕ ПРОСТРАНСТВО</div>
+    <div class="topbar-heading" id="viewTitle">Новый разговор</div>
+   </div>
+   <div class="topbar-actions">
+    <div class="service-status" title="Удалённый чат-сервис ещё подключается"><i></i><span>Сервис настраивается</span></div>
+    <button class="icon-button desktop-action" id="exportBtn" type="button" title="Экспортировать чат" aria-label="Экспортировать чат" disabled>
+     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 3v12m-4-4 4 4 4-4M5 17v4h14v-4"/></svg>
+    </button>
+    <button class="icon-button" id="clearBtn" type="button" title="Очистить чат" aria-label="Очистить чат" disabled>
+     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m4 4v6m5-6v6"/></svg>
+    </button>
+   </div>
+  </header>
+
+  <main class="main-content">
+   <section class="view" id="chatView" aria-label="Чат">
+    <div class="chat-scroll" id="chatScroll">
+     <div class="chat-inner">
+      <div class="welcome" id="welcome">
+       <div class="welcome-mark"><img src="./icon.svg" alt=""></div>
+       <h1>Чем займёмся?</h1>
+       <p class="welcome-copy">Общение, идеи, объяснения и поиск информации — в одном спокойном и удобном пространстве.</p>
+       <div class="welcome-state"><i></i> Онлайн-режим · подключение диалога завершается</div>
+       <div class="suggestion-grid">
+        <button class="suggestion" type="button" data-suggestion="web">
+         <span class="suggestion-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10.8" cy="10.8" r="7.2"/><path d="m16.2 16.2 4.3 4.3"/></svg></span>
+         <span><strong>Найти в интернете</strong><small>Страницы, статьи и свежие материалы</small></span>
+        </button>
+        <button class="suggestion" type="button" data-suggestion="history">
+         <span class="suggestion-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 5h16v12H8l-4 3V5Z"/><path d="M8 9h8M8 13h5"/></svg></span>
+         <span><strong>Вернуться к разговору</strong><small>Открой сохранённый чат слева</small></span>
+        </button>
+       </div>
+      </div>
+      <div class="thread-messages" id="threadMessages"></div>
+     </div>
+    </div>
+    <div class="composer-wrap">
+     <div class="chat-notice" id="chatNotice">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></svg>
+      <span>История чатов и интерфейс уже доступны. Онлайн-сервер диалога ещё не подключён, поэтому отправка сообщений пока выключена. Веб-поиск работает отдельно.</span>
+     </div>
+     <div class="composer" aria-label="Поле сообщения">
+      <textarea id="prompt" rows="1" maxlength="8000" placeholder="Онлайн-чат станет доступен после подключения сервиса…" aria-label="Сообщение" disabled></textarea>
+      <div class="composer-bottom">
+       <span class="composer-hint">Пока можно искать информацию в интернете</span>
+       <div class="composer-tools">
+        <button class="send-button" id="sendBtn" type="button" aria-label="Отправить сообщение" disabled>
+         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 14-7-5 14-2-6-7-1Z"/><path d="m12 13 7-8"/></svg>
+        </button>
+       </div>
+      </div>
+     </div>
+    </div>
+   </section>
+
+   <section class="view search-page" id="searchView" hidden aria-label="Поиск по интернету">
+    <div class="search-container">
+     <div class="search-intro">
+      <div class="search-symbol"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10.8" cy="10.8" r="7.2"/><path d="m16.2 16.2 4.3 4.3"/></svg></div>
+      <h1>Поиск по интернету</h1>
+      <p>Ищи информацию по открытым веб-страницам, а не только в одной энциклопедии.</p>
+     </div>
+     <form class="search-form" id="searchForm">
+      <input class="search-input" id="webQuery" type="search" placeholder="Что хочешь найти?" autocomplete="off" aria-label="Поисковый запрос" required>
+      <button class="search-submit" id="searchSubmit" type="submit">
+       <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.8" cy="10.8" r="7.2"/><path d="m16.2 16.2 4.3 4.3"/></svg>
+       <span>Найти</span>
+      </button>
+     </form>
+     <div class="search-footnote">Запрос отправляется поисковому сервису. Результаты открывают первоисточники.</div>
+     <div class="search-state" id="searchState"><span>Введи запрос, чтобы начать поиск.</span><span id="searchResultCount"></span></div>
+     <div class="search-results" id="searchResults"></div>
+     <div class="search-empty" id="searchEmpty" hidden>Пока нет результатов. Попробуй изменить формулировку запроса.</div>
+    </div>
+   </section>
+  </main>
  </div>
-</main>
 </div>
-<script type="module" src="./src/app.js"></script>
-</body></html>
+<script type="module" src="./src/app.js?v=20261122-chat-ui-1"></script>
+</body>
+</html>
