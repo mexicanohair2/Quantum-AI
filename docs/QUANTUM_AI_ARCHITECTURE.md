@@ -61,7 +61,7 @@ Cloudflare Workers AI предоставляет общую квоту 10 000 Ne
 
 Лимит 10 000 нейронов на игрока — внутренняя квота QQCross, а не отдельная бесплатная квота Cloudflare. Если много игроков используют свои лимиты, общий расход Cloudflare может превысить бесплатную квоту.
 
-Попытка чтения Billing Profile и подписок через текущую Cloudflare OAuth-интеграцию завершилась 403: у OAuth-сессии нет Billing Read scope. В аккаунте найден отдельный legacy Worker `qq-ai-cloud-api` с AI binding и usage model `standard`. Это ресурс QQ-AI: его запрещено изменять, переиспользовать или подключать к Quantum-AI. До подтверждения тарифа и общей статистики новый Worker не развертывать и не включать inference.
+Повторная попытка через подключённую Cloudflare OAuth-интеграцию: Billing Profile, account billing usage и account subscriptions вернули HTTP 403. API прямо указывает, что OAuth не поддерживается для этих endpoint и нужен API token с Billing Read. Такой токен не предоставлялся; его не запрашивать в чате, не помещать в код и не создавать от имени пользователя. В аккаунте найден отдельный legacy Worker `qq-ai-cloud-api` с AI binding и usage model `standard`. Это ресурс QQ-AI: его запрещено изменять, переиспользовать или подключать к Quantum-AI. До подтверждения тарифа и общей статистики новый Worker не развертывать и не включать inference.
 
 ## 5. Поиск
 
@@ -82,4 +82,4 @@ Cloudflare Workers AI предоставляет общую квоту 10 000 Ne
 - CORS, ошибки и дневной резерв;
 - сохранение истории и мобильный UI.
 
-Предыдущий CI до перехода на одну модель проходил backend/browser smoke tests и мобильные/desktop Playwright-проверки. Проверки с заглушками не подтверждают живую генерацию. Для текущей версии нужно заново выполнить регрессионные тесты, затем отдельно проверить опубликованный endpoint, реальные ответы Workers AI, keyless-поиск и страницу на Android.
+GitHub Actions run #99 для PR #3 и commit `008877078f4307e83dacd983c20f2a7d8fe52510` завершился успешно: JavaScript syntax, static regression checks, assistant-tool tests, per-player quota/backend smoke tests и clean chat browser smoke test. Тестовые ответы подменяются заглушками и не подтверждают реальную генерацию. Отдельно требуется проверить опубликованный endpoint, реальные ответы Workers AI, keyless-поиск и страницу на Android.
