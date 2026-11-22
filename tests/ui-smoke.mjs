@@ -7,6 +7,17 @@ const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 try {
   await page.route("https://api.tavily.com/search", async (route) => {
     const request = route.request();
+    if (request.method() === "OPTIONS") {
+      await route.fulfill({
+        status: 204,
+        headers: {
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "POST, OPTIONS",
+          "access-control-allow-headers": "content-type, x-tavily-access-mode"
+        }
+      });
+      return;
+    }
     const headers = request.headers();
     const payload = request.postDataJSON();
     assert.equal(request.method(), "POST");
@@ -16,6 +27,7 @@ try {
     await route.fulfill({
       status: 200,
       contentType: "application/json",
+      headers: { "access-control-allow-origin": "*" },
       body: JSON.stringify({
         results: [{
           title: "Проверочная страница",
