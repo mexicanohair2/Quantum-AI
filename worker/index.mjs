@@ -247,7 +247,7 @@ function resultTextForUsage(result) {
   return "";
 }
 
-function actualNeurons(result, messages, model = MODEL) {
+function actualNeurons(result, messages, model = MODEL, extraInputTokens = 0) {
   const usage = result?.usage || result?.result?.usage || {};
   const inputTokens = Number(usage.prompt_tokens ?? usage.input_tokens);
   const outputTokens = Number(usage.completion_tokens ?? usage.output_tokens);
@@ -260,7 +260,7 @@ function actualNeurons(result, messages, model = MODEL) {
       outputTokens * outputRate / 1_000_000
     ));
   }
-  return estimateModelNeurons(messages, resultTextForUsage(result).length, model);
+  return estimateModelNeurons(messages, resultTextForUsage(result).length, model, extraInputTokens);
 }
 
 async function searchWeb(query, topic = "general") {
@@ -329,7 +329,7 @@ function responseText(result) {
   return "";
 }
 
-async function runModel(env, messages, allowSearch, model = MODEL) {
+async function runModel(env, messages, allowSearch, model = MODEL, extraInputTokens = 0) {
   const options = {
     messages,
     max_completion_tokens: MAX_COMPLETION_TOKENS,
@@ -340,7 +340,7 @@ async function runModel(env, messages, allowSearch, model = MODEL) {
     options.tool_choice = "auto";
   }
   const result = await env.AI.run(model, options);
-  return { result, neurons: actualNeurons(result, messages, model) };
+  return { result, neurons: actualNeurons(result, messages, model, extraInputTokens) };
 }
 
 export async function handleChat(request, env, user) {
@@ -377,6 +377,7 @@ export async function handleChat(request, env, user) {
   }
   const messages = normalizeMessages(incomingMessages);
   const model = imageDataUrl ? VISION_MODEL : MODEL;
+  const imageTokens = imageDataUrl ? IMAGE_RESERVATION_TOKENS : 0;
   const modelMessages = [{ role: "system", content: SYSTEM_PROMPT }, ...messages];
   if (imageDataUrl) {
     const lastMessage = modelMessages[modelMessages.length - 1];
@@ -391,7 +392,7 @@ export async function handleChat(request, env, user) {
   let operationError = null;
 
   try {
-    const firstCall = await runModel(env, modelMessages, true, model);
+    const firstCall = await runModel(env, modelMessages, true, model, imageTokens);
     actual += firstCall.neurons;
     const first = firstCall.result;
     const toolCalls = Array.isArray(first?.tool_calls) ? first.tool_calls : [];
@@ -431,7 +432,7 @@ export async function handleChat(request, env, user) {
           content: JSON.stringify(search)
         }
       ];
-      const finalCall = await runModel(env, toolMessages, false, model);
+      const finalCall = await runModel(env, toolMessages, false, model, imageTokens);
       actual += finalCall.neurons;
       const reply = responseText(finalCall.result);
       if (!reply) throw new HttpError(502, "Модель не смогла подготовить итоговый ответ.");
