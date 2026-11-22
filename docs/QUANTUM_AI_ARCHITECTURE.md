@@ -19,7 +19,7 @@
 - Клиент использует существующий Supabase Auth access token и сверяет UUID с профилем игрока.
 - История хранится в localStorage отдельно для каждого UUID; синхронизации между устройствами пока нет.
 - Клиент ожидает `GET /api/balance` и `POST /api/chat`; секреты провайдера в браузер не помещаются.
-- До публикации Worker интерфейс честно показывает, что сервер ещё не запущен.
+- После входа в QQCross интерфейс проверяет `/health`, затем получает личный баланс через `/api/balance` и только после этого включает поле отправки.
 
 ## 3. Серверная реализация
 
@@ -82,4 +82,4 @@ Cloudflare Workers AI предоставляет общую квоту 10 000 Ne
 - CORS, ошибки и дневной резерв;
 - сохранение истории и мобильный UI.
 
-GitHub Actions run #104 для PR #3 и commit `4ff66a8f3665d456d579f9398094884d89c8460a` завершился успешно: JavaScript syntax, static regression checks, assistant-tool tests, per-player quota/backend smoke tests и clean chat browser smoke test. Дополнительный тест подтверждает, что HTTP-ошибка веб-поиска передаётся Qwen и не обрывает генерацию. Run #106 на последнем обновлении документации также завершился успешно. Тестовые ответы подменяются заглушками и не подтверждают реальную генерацию. Проверка реальной прямой генерации Qwen выполнена. Осталось проверить Worker health/API через origin QQCross, авторизованный round-trip в браузере и работу страницы на Android.
+GitHub Actions run #108 после последнего изменения Quantum-AI завершился успешно: JavaScript syntax, static regression checks, assistant-tool tests, per-player quota/backend smoke tests и chat browser smoke test. Отдельный регрессионный тест подтверждает, что HTTP-ошибка веб-поиска передаётся Qwen и не обрывает генерацию. Тестовые ответы CI подменяются заглушками и сами по себе не подтверждают реальную генерацию. Прямая генерация Qwen проверена отдельно реальным вызовом API. QQCross PR #110 объединён в `main`; Pages deployment run `45085068113` завершился успешно. Worker `quantum-ai-chat-api` опубликован, workers.dev subdomain включён. Supabase Edge Function `qqcross-ai-neuron-quota` имеет статус ACTIVE; все три миграции квот применены; `get_qqcross_ai_neuron_balance` проверен SQL-запросом и возвращает ожидаемый начальный баланс. Осталось подтвердить авторизованный запрос/ответ из реального браузера сессии QQCross и выполнить проверку на Android.
