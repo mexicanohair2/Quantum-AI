@@ -42,6 +42,8 @@ assert.ok(backend.includes('const MODEL = "@cf/zai-org/glm-4.7-flash"'));
 assert.ok(backend.includes('const VISION_MODEL = "@cf/qwen/qwen3.8-27b"'));
 assert.ok(backend.includes("MAX_IMAGE_DATA_URL_CHARS"));
 assert.ok(backend.includes("IMAGE_RESERVATION_TOKENS"));
+assert.ok(backend.includes("actualNeurons(result, messages, model = MODEL, extraInputTokens = 0)"));
+assert.ok(backend.includes("resultTextForUsage(result).length, model, extraInputTokens"));
 assert.ok(backend.includes("VISION_INPUT_NEURONS_PER_MILLION"));
 assert.ok(backend.includes("tool_choice = \"auto\""));
 assert.ok(backend.includes("authenticatePlayer"));
