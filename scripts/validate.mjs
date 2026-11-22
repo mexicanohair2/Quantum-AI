@@ -44,7 +44,7 @@ assert.ok(!backend.includes("VISION_MODEL"), "text and image turns must not be r
 assert.ok(backend.includes("MAX_COMPLETION_TOKENS = 2048"));
 assert.ok(backend.includes("INPUT_NEURONS_PER_MILLION = 40909"));
 assert.ok(backend.includes("OUTPUT_NEURONS_PER_MILLION = 290909"));
-assert.ok(backend.includes('options.reasoning_effort = "medium"'));
+assert.ok(backend.includes('reasoning_effort: "medium"'));
 assert.ok(backend.includes("temperature: 1.0"));
 assert.ok(backend.includes("может быть несовершеннолетним"));
 assert.ok(backend.includes("Не давай инструкций по самоповреждению"));
