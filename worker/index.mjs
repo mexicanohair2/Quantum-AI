@@ -203,6 +203,8 @@ export async function handleChat(request, env) {
     throw new HttpError(503, "Сервер ИИ ещё не настроен.");
   }
 
+  const declaredLength = Number(request.headers.get("Content-Length") || 0);
+  if (declaredLength > MAX_BODY_CHARS) throw new HttpError(413, "Сообщение слишком большое.");
   const raw = await request.text();
   if (raw.length > MAX_BODY_CHARS) throw new HttpError(413, "Сообщение слишком большое.");
   let body;
