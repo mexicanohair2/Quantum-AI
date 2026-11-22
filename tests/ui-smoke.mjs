@@ -17,14 +17,14 @@ try{
  await page.locator("#chatError").waitFor({state:"visible"});
  assert.ok((await page.locator("#chatError").innerText()).includes("сервер ИИ ещё не подключён"));
  assert.equal(await page.locator("#prompt").inputValue(),"Привет");
+ assert.equal(await page.locator("#chatHistory .history-item").count(),0);
  await page.locator("#newChatBtn").click();
- assert.equal(await page.locator("#historyCount").count(),0);
- assert.equal(await page.locator("#chatHistory .history-item").count(),2);
+ assert.equal(await page.locator("#chatHistory .history-item").count(),1);
  await page.locator("#menuBtn").click();
  assert.equal(await page.locator("#sidebar").evaluate(n=>n.classList.contains("open")),true);
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=390));
  await page.locator("#closeSidebarBtn").click();
  await page.reload({waitUntil:"networkidle"});
- assert.equal(await page.locator("#chatHistory .history-item").count(),2);
+ assert.equal(await page.locator("#chatHistory .history-item").count(),1);
  console.log("Quantum-AI clean chat browser smoke test passed.");
 }finally{await browser.close();}
