@@ -19,7 +19,7 @@ function makeRequest(messages, options = {}) {
       Authorization: options.authorization ?? "Bearer player-session-token",
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ messages })
+    body: JSON.stringify({ messages, ...(options.imageDataUrl ? { imageDataUrl: options.imageDataUrl } : {}) })
   });
 }
 
@@ -29,7 +29,7 @@ const env = {
   AI: {
     async run(model, options) {
       assert.equal(model, "@cf/zai-org/glm-4.7-flash");
-      assert.equal(options.max_completion_tokens, 192);
+      assert.equal(options.max_completion_tokens, 512);
       assert.equal(options.tool_choice, "auto");
       assert.equal(options.tools[0].name, "web_search");
       return {
@@ -109,6 +109,7 @@ try {
   const messages = [{ role: "user", content: "Привет" }];
   assert.ok(estimateReservation(normalizeMessages(messages)) > 0);
   assert.ok(estimateReservation(normalizeMessages(messages)) < 10000);
+  assert.ok(estimateReservation(normalizeMessages(messages), true) > estimateReservation(normalizeMessages(messages)));
 
   const directResponse = await worker.fetch(makeRequest(messages), env);
   assert.equal(directResponse.status, 200);
@@ -159,6 +160,36 @@ try {
   assert.equal(toolData.sources[0].url, "https://example.org/space");
   assert.equal(modelCalls, 2);
   assert.equal(searchCalls, 1);
+
+  const imageDataUrl = "data:image/jpeg;base64,/9j/2Q==";
+  env.AI = {
+    async run(model, options) {
+      assert.equal(model, "@cf/qwen/qwen3.8-27b");
+      assert.equal(options.max_completion_tokens, 512);
+      const userMessage = options.messages.find((message) => message.role === "user");
+      assert.ok(Array.isArray(userMessage.content));
+      assert.equal(userMessage.content[1].type, "image_url");
+      assert.equal(userMessage.content[1].image_url.url, imageDataUrl);
+      return {
+        response: "На изображении виден объект.",
+        usage: { prompt_tokens: 1200, completion_tokens: 24 }
+      };
+    }
+  };
+  const imageResponse = await worker.fetch(
+    makeRequest([{ role: "user", content: "Что изображено?" }], { imageDataUrl }),
+    env
+  );
+  assert.equal(imageResponse.status, 200);
+  const imageData = await imageResponse.json();
+  assert.equal(imageData.reply, "На изображении виден объект.");
+  assert.equal(imageData.model, "@cf/qwen/qwen3.8-27b");
+
+  const invalidImageResponse = await worker.fetch(
+    makeRequest([{ role: "user", content: "Проверь фото" }], { imageDataUrl: "data:image/svg+xml;base64,PHN2Zz4=" }),
+    env
+  );
+  assert.equal(invalidImageResponse.status, 400);
 
   const balanceResponse = await worker.fetch(
     new Request("https://quantum-ai-chat-api.example.workers.dev/api/balance", {
