@@ -33,6 +33,6 @@ assert.ok(sw.includes("./src/web-search.js"));
 assert.ok(!sw.includes("quantum-engine.js"));
 assert.ok(manifest.includes("Quantum-AI"));
 assert.ok(readme.includes("Search"));
-assert.ok(architecture.includes("Веб-поиск"));
+assert.ok(architecture.includes("Общий веб-поиск"));
 
 console.log("Quantum-AI workspace, chat history and web-search checks passed.");
