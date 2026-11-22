@@ -487,15 +487,7 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
-function registerFreshAppShell() {
-  if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" })
-    .then((registration) => registration.update())
-    .catch(() => {});
-}
-
 function initialize() {
-  registerFreshAppShell();
   renderHistory();
   renderCurrentChat();
   setView("chat");
