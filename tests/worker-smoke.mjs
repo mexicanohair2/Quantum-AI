@@ -28,8 +28,9 @@ const env = {
   SUPABASE_PUBLISHABLE_KEY: "sb_publishable_test",
   AI: {
     async run(model, options) {
-      assert.equal(model, "@cf/zai-org/glm-4.7-flash");
-      assert.equal(options.max_completion_tokens, 512);
+      assert.equal(model, "@cf/qwen/qwen3.8-27b");
+      assert.equal(options.max_completion_tokens, 2048);
+      assert.equal(options.reasoning_effort, "medium");
       assert.equal(options.tool_choice, "auto");
       assert.equal(options.tools[0].name, "web_search");
       return {
@@ -117,6 +118,7 @@ try {
   assert.equal(directResponse.status, 200);
   const directData = await directResponse.json();
   assert.equal(directData.reply, "Привет. Чем могу помочь?");
+  assert.equal(directData.model, "@cf/qwen/qwen3.8-27b", "text-only turns must use the same Qwen model as image turns");
   assert.equal(directData.quota.limit, 10000);
   assert.equal(directData.quota.remaining, 9900 - settleCalls[0].actualNeurons);
   assert.equal(reserveCalls[0].action, "reserve");
@@ -129,6 +131,9 @@ try {
   env.AI = {
     async run(model, options) {
       modelCalls += 1;
+      assert.equal(model, "@cf/qwen/qwen3.8-27b", "tool-calling turns must use Qwen");
+      assert.equal(options.max_completion_tokens, 2048);
+      assert.equal(options.reasoning_effort, "medium");
       if (modelCalls === 1) {
         assert.equal(options.tools.length, 1);
         return {
