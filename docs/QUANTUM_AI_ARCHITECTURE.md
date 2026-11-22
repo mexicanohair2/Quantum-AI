@@ -1,6 +1,6 @@
 # Quantum-AI — архитектура и статус
 
-**Обновлено:** 22 ноября 2026 года  
+**Обновлено:** 23 ноября 2026 года  
 Назначение: встроенный ИИ-помощник QQCross вместо энциклопедии.
 
 ## 1. Принцип продукта
@@ -61,7 +61,7 @@ Cloudflare Workers AI предоставляет общую квоту 10 000 Ne
 
 Лимит 10 000 нейронов на игрока — внутренняя квота QQCross, а не отдельная бесплатная квота Cloudflare. Если много игроков используют свои лимиты, общий расход Cloudflare может превысить бесплатную квоту.
 
-Повторная попытка через подключённую Cloudflare OAuth-интеграцию: Billing Profile, account billing usage и account subscriptions вернули HTTP 403. API прямо указывает, что OAuth не поддерживается для этих endpoint и нужен API token с Billing Read. Такой токен не предоставлялся; его не запрашивать в чате, не помещать в код и не создавать от имени пользователя. В аккаунте найден отдельный legacy Worker `qq-ai-cloud-api` с AI binding и usage model `standard`. Это ресурс QQ-AI: его запрещено изменять, переиспользовать или подключать к Quantum-AI. До подтверждения тарифа и общей статистики новый Worker не развертывать и не включать inference.
+Подключённая Cloudflare OAuth-интеграция не имеет Billing Read: Billing Profile, account billing usage и subscriptions возвращают HTTP 403. OAuth не поддерживает эти endpoint; нужен API token с Billing Read. Такой токен не предоставлялся и не помещался в код. В аккаунте найден legacy Worker `qq-ai-cloud-api`; это ресурс отдельного QQ-AI, он не изменялся и не переиспользовался. Для Quantum-AI создан отдельный Worker `quantum-ai-chat-api` на `https://quantum-ai-chat-api.qq-ai-cloud.workers.dev`, с собственным AI binding и Supabase configuration. Workers.dev subdomain включён. Billing Read всё ещё недоступен, поэтому тариф аккаунта и использование других AI-ресурсов не подтверждены. Cloudflare публикует 10 000 бесплатных Neurons в сутки на весь аккаунт; превышение на Workers Paid тарифицируется. Одна реальная проверка Qwen из API вернула 323 для `17 × 19` и сообщила расход 94.6 Neurons. Не считать внутреннюю квоту игрока отдельной бесплатной квотой Cloudflare.
 
 ## 5. Поиск
 
@@ -82,4 +82,4 @@ Cloudflare Workers AI предоставляет общую квоту 10 000 Ne
 - CORS, ошибки и дневной резерв;
 - сохранение истории и мобильный UI.
 
-GitHub Actions run #104 для PR #3 и commit `4ff66a8f3665d456d579f9398094884d89c8460a` завершился успешно: JavaScript syntax, static regression checks, assistant-tool tests, per-player quota/backend smoke tests и clean chat browser smoke test. Дополнительный тест подтверждает, что HTTP-ошибка веб-поиска передаётся Qwen и не обрывает генерацию. Тестовые ответы подменяются заглушками и не подтверждают реальную генерацию. Отдельно требуется проверить опубликованный endpoint, реальные ответы Workers AI, keyless-поиск и страницу на Android.
+GitHub Actions run #104 для PR #3 и commit `4ff66a8f3665d456d579f9398094884d89c8460a` завершился успешно: JavaScript syntax, static regression checks, assistant-tool tests, per-player quota/backend smoke tests и clean chat browser smoke test. Дополнительный тест подтверждает, что HTTP-ошибка веб-поиска передаётся Qwen и не обрывает генерацию. Run #106 на последнем обновлении документации также завершился успешно. Тестовые ответы подменяются заглушками и не подтверждают реальную генерацию. Проверка реальной прямой генерации Qwen выполнена. Осталось проверить Worker health/API через origin QQCross, авторизованный round-trip в браузере и работу страницы на Android.
