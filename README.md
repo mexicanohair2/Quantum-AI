@@ -22,7 +22,7 @@ https://mexicanohair2.github.io/Quantum-AI/
 
 1. Open the live app in a current Android Chrome browser.
 2. Press **Загрузить модель**.
-3. Allow the initial model download to finish. The selected q4 artifacts are roughly 0.7 GB in total; keep at least 1.5 GB of free space and preferably use Wi-Fi.
+3. Allow the initial model download to finish. The selected quantized ONNX artifacts are roughly 0.7 GB in total; keep at least 1.5 GB of free space and preferably use Wi-Fi.
 4. After the model is loaded, send a message. Generation is local on the device.
 
 The model is not included in the GitHub repository. It is downloaded directly from Hugging Face the first time. No login or API token is needed for the public model files.
