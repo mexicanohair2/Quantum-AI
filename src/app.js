@@ -310,18 +310,13 @@ $("chatHistory").addEventListener("click", (event) => {
 });
 
 $("newChatBtn").addEventListener("click", createChat);
-$("chatNav").addEventListener("click", () => setView("chat"));
+$("chatNav").addEventListener("click", () => setView());
 $("chatFilter").addEventListener("input", renderHistory);
 $("menuBtn").addEventListener("click", openSidebar);
 $("closeSidebarBtn").addEventListener("click", closeSidebar);
 $("sidebarBackdrop").addEventListener("click", closeSidebar);
 $("exportBtn").addEventListener("click", exportActiveChat);
 $("clearBtn").addEventListener("click", clearActiveChat);
-
-$("searchForm").addEventListener("submit", (event) => {
-  event.preventDefault();
-  runWebSearch($("webQuery").value);
-});
 
 document.querySelectorAll("[data-suggestion='web']").forEach((button) => {
   button.addEventListener("click", () => setView("search"));
