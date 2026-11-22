@@ -5,3 +5,7 @@ workers_dev = true
 
 [ai]
 binding = "AI"
+
+[vars]
+SUPABASE_URL = "https://lzpkronttfzbubbfggsb.supabase.co"
+SUPABASE_PUBLISHABLE_KEY = "sb_publishable_2PD3wYGG1aYoxRqhyM8wMA_OIQrwm3k"
