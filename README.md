@@ -1,6 +1,6 @@
 # Quantum-AI
 
-Quantum-AI is designed as a single online AI assistant conversation, not as a chat plus a separate search engine.
+Quantum-AI is designed as one online AI chat. The user sends a normal message; the assistant should decide when it needs external tools such as web search.
 
 ## Live app
 
@@ -8,35 +8,38 @@ https://mexicanohair2.github.io/Quantum-AI/
 
 ## Product behavior
 
-- The user talks to Quantum-AI in one conversation.
-- The assistant decides whether it can answer from stable knowledge or needs current external information.
-- When needed, the model calls the internal `web_search` tool, reviews the returned pages, and writes one synthesized answer with source links.
-- The user does not need to switch to a separate search screen or formulate a second search query.
-- Search is an assistant capability, not an independent product feature.
-- Search covers pages available to the provider's index; it cannot guarantee coverage of the entire internet.
-- Conversation history is kept locally in the current browser.
+- One chat screen: conversation and message composer.
+- Chat history is available in the side panel.
+- No separate search page, service-status banner, export/clear buttons, or decorative information cards.
+- The assistant should answer directly when it can and call `web_search` only when current or externally verifiable information is needed.
+- Search is an internal assistant tool, not a separate user-facing mode.
 
 ## Current implementation status
 
-- Mobile-first workspace, sidebar, local chat history, rename/delete/export: implemented.
-- Separate search page and search navigation: removed.
-- Internal `web_search` tool contract and executor: implemented.
-- Remote model inference and automatic tool-calling loop: **not connected**.
-- The chat composer remains disabled until a real remote inference backend is integrated. The current website must not pretend to answer as an AI while no model is connected.
+- Simplified mobile-first chat interface: implemented.
+- Chat history in browser storage: implemented.
+- Message field and send button: enabled.
+- Honest unavailable-service error when no inference endpoint is configured: implemented.
+- Internal `web_search` tool schema and executor: prepared.
+- Real remote model inference and automatic tool-calling: **not connected yet**. The UI does not fabricate AI answers.
 
-## Service constraints
+## Backend requirements
 
-A genuinely free, reliable, no-key, no-account, unlimited hosted model endpoint cannot be assumed. A working remote model requires a provider or infrastructure with explicit capacity, usage limits, and a secure server-side integration. No API secret may be embedded in this public frontend.
+The public GitHub Pages frontend cannot securely host model credentials or inference. A remote backend must be configured with an AI binding/provider and a server-side tool-calling loop. Do not put API secrets in public JavaScript.
+
+Cloudflare Workers AI offers a published free daily allocation of 10,000 Neurons; usage above that fails on Workers Free, while Workers Paid can bill beyond the allocation. The connected account's billing plan could not be verified with the current read permissions, so do not activate inference or imply it is guaranteed cost-free until that is confirmed.
 
 ## Privacy
 
 - Chat history is stored in this browser and is not synchronized between devices.
-- When the assistant's web-search tool is connected to the model, search queries are sent to the external search provider and source links are shown in the answer.
-- The UI identifies the product as Quantum-AI. Required third-party license notices must remain in technical/legal documentation.
+- When inference is connected, message content will be sent to the configured model provider.
+- When the assistant calls web search, the query is sent to the search provider.
+- Required third-party license notices remain in technical/legal documentation.
 
 ## Release status
 
-- Unified chat-first UI: implemented in source.
-- Internal web-search tool contract: implemented and statically testable.
-- Remote inference with model-controlled tool calls: pending.
-- Real-device end-to-end testing: pending.
+- Clean chat-first UI: implemented in source.
+- Browser history persistence: implemented.
+- Backend integration: pending billing-safe provider confirmation and deployment.
+- End-to-end AI answers and model-controlled search: pending.
+- Real Android-device testing: pending.
