@@ -1,62 +1,115 @@
-# Quantum-AI — требования и предварительные архитектурные заметки
+# Quantum-AI — актуальная архитектура и статус
 
-## Принцип проекта
+**Дата обновления:** 22 ноября 2026 года  
+**Стратегия:** бесплатное приложение на базе открытой Qwen, без платных API, ключей, подписок и обязательного сервера.
 
-Quantum-AI должна стать самостоятельной языковой моделью, обученной с нуля. Запрещены скрытая подмена ответов внешней языковой моделью, использование чужих pretrained-весов для инициализации и дистилляция чужой модели. Поиск, память и инструменты могут дополнять собственную модель, но не выдаются за неё.
+## 1. Продуктовое решение
 
-**Статус:** документ фиксирует требования и направления из предыдущих обсуждений. Финальная архитектура, размер модели, токенизатор и конфигурация обучения ещё не утверждены. Их нельзя выбирать до завершения проверки доступных вычислительных ресурсов, данных и воспроизводимого пути хранения checkpoint.
+- Продукт называется **Quantum-AI**.
+- Qwen — текущее языковое ядро. Приложение не выдаёт веса Qwen за собственную модель.
+- QQ-AI остаётся отдельным архивом наработок. Слияние репозиториев не выполнять без отдельного аудита и необходимости.
+- Обучение собственной foundation model с нуля не входит в ближайший план.
+- Основной пользовательский сценарий — запуск на телефоне, минимум настройки, локальная генерация.
+- Внешние запросы разрешены только для отдельных дополнительных функций (например, Wikipedia search) и должны быть явно обозначены.
 
-## Целевая структура продукта
+## 2. Выбранный первый runtime
 
-- **QQ Brain / Orchestrator:** классификация запроса, сбор контекста и выбор нужных модулей.
-- **Native Model Runtime:** запуск только собственной модели Quantum-AI.
-- **Search:** получение и проверка внешних источников с сохранением ссылок и дат.
-- **Memory:** контекст текущего диалога и отдельная управляемая пользователем долговременная память.
-- **Text:** работа с текстом и документами.
-- **Vision / Video:** отдельные мультимодальные направления, которые подключаются только после самостоятельной реализации и проверки.
-- **Tools:** разрешённые действия с типизированными контрактами, минимальными правами и подтверждением пользователя для важных действий.
-- **Background Tasks:** ограниченные фоновые задачи с состоянием, отменой и прозрачным прогрессом.
+- ONNX model: onnx-community/Qwen3.5-0.8B-ONNX.
+- Runtime: @huggingface/transformers 4.3.2.
+- Model class: Qwen3_5ForConditionalGeneration with AutoProcessor.
+- Quantization: q4 for embedding, decoder and vision encoder.
+- Preferred execution: WebGPU when navigator.gpu.requestAdapter() succeeds.
+- Fallback: ONNX Runtime WASM/CPU. This may be substantially slower and can fail on constrained devices.
+- Model artifacts are downloaded from the public Hugging Face Hub at first launch. No API token is required for the public model.
 
-## Предварительные технические заметки
+The model card documents the ONNX Transformers.js integration, Qwen3.5 multimodal architecture and Apache-2.0 license. The 0.8B model is a small model for prototyping/lightweight tasks; do not describe it as equal to a large hosted Qwen model.
 
-В ранних обсуждениях рассматривались следующие варианты. Они не являются окончательным выбором:
+## 3. Device strategy
 
-- Byte-level BPE с диапазонами специальных и byte token IDs;
-- decoder-only Transformer;
-- RMSNorm, Grouped-Query Attention, SwiGLU и causal attention;
-- генерация top-k / top-p, repetition penalty и потоковая выдача;
-- SQLite для памяти;
-- ограниченный AST-модуль для математических выражений;
-- отдельный поисковый модуль с проверкой DNS/IP, редиректов и SSRF;
-- CNN-признаки и cross-attention как один из вариантов будущего vision-модуля.
+1. Detect a usable WebGPU adapter at runtime instead of trusting the device name.
+2. Use q4 weights to reduce memory and download requirements.
+3. If WebGPU loading fails, attempt WASM as a slower fallback.
+4. Show a clear loading/progress state and a clear error when both routes fail.
+5. Keep the first-run download warning visible (roughly 0.7 GB of selected q4 artifacts; exact transfer depends on runtime and model repository revisions).
+6. Validate latency, RAM use, temperature, browser cache persistence and image inference on the physical target phone before marking support as verified.
 
-Эти идеи требуют повторной оценки по результатам feasibility gate. В частности, размеры слоёв, число параметров, контекстное окно и точные настройки внимания не выбраны.
+The HONOR 400 product specification lists Snapdragon 7 Gen 3 and Adreno 720; Chrome documents Android WebGPU availability on Android 12+ devices with Qualcomm/ARM GPUs. This makes WebGPU a reasonable candidate, not a guarantee that every installed browser build will expose a working adapter.
 
-## Обязательный путь создания модели
+## 4. Current app modules
 
-1. Подтвердить доступные вычислительные ресурсы и допустимые условия их использования.
-2. Подготовить и документировать разрешённый обучающий корпус, очистку и дедупликацию.
-3. Выбрать токенизатор и архитектуру только после измерений.
-4. Инициализировать веса случайно.
-5. Провести воспроизводимое pretraining с логами, seed и checkpoint.
-6. Оценить модель на отдельном validation-наборе.
-7. При наличии ресурсов выполнить отдельное instruction tuning на разрешённых данных.
-8. Подключить runtime к сайту только после успешного тестирования настоящего checkpoint.
+- index.html: mobile-first interface and controls.
+- src/app.js: chat state, local history, attachments, voice controls, Wikipedia search and UI lifecycle.
+- src/quantum-engine.js: Qwen loading, WebGPU/WASM selection, multimodal preprocessing and local generation.
+- sw.js: cache-first app shell for installability/offline page access.
+- manifest.webmanifest: installable PWA metadata.
+- scripts/validate.mjs: static regression checks.
 
-Каждый артефакт должен содержать версию, конфигурацию, версию токенизатора, происхождение данных, лицензии, логи и контрольные суммы.
+## 5. Data flow and privacy
 
-## Ранее отмеченные технические проверки
+### Local chat
+User message → local browser app → Qwen ONNX runtime → local answer → local browser history.
 
-Если будет подтверждён выбор byte-level BPE, повторно проверить согласованность ID базовых байтов и BPE merges. Для памяти проверить изоляцию по user_id, rollback и конкурентный доступ. Для поиска проверить DNS rebinding, фактический IP соединения, редиректы и запрет private/loopback/link-local/reserved адресов. Для обучения проверить точное восстановление scheduler, RNG и состояния optimizer из checkpoint.
+No inference API endpoint, API key, paid cloud model or remote chat backend exists in this implementation.
 
-## Что подтверждено сейчас
+### Image
+Image file → browser object URL → Qwen processor/vision encoder → local generation. Image is not uploaded to an inference server by the app.
 
-- Сохранены требования к собственной модели и продуктовым модулям.
-- Выполнена только предварительная оценка вычислительных ресурсов.
-- На момент последнего feasibility-отчёта среда разработки имела CPU-only PyTorch, без CUDA/GPU.
-- Не подтверждена разрешённая бесплатная GPU-сессия и постоянное хранилище checkpoint.
-- Собственная модель не реализована и не обучена.
-- Датасет и токенизатор не подготовлены.
-- Полноценный runtime и inference не реализованы.
+### Text files
+TXT/MD/JSON/CSV file → browser text read → bounded text context → local Qwen. Unsupported office/PDF/video formats are not claimed as supported.
 
-Поэтому текущий веб-интерфейс не отправляет сообщения внешней модели и не имитирует ответы Quantum-AI. Он будет подключён к собственной модели только после завершения обучения и проверки.
+### Wikipedia search
+User explicitly toggles search or uses a search-intent phrase → Wikipedia public MediaWiki API → short snippets and source links → Qwen receives those snippets. This feature needs internet and is not a general crawler for the entire web.
+
+### Voice
+- Speech recognition uses the browser SpeechRecognition/Web Speech API where available. The browser may use an online recognition service; offline behavior is not guaranteed.
+- Speech output uses browser/device speech synthesis, subject to installed voices.
+
+### Storage
+- Conversation history: browser localStorage, bounded to a fixed number of recent messages.
+- App shell: service worker cache.
+- Model weights/runtime: Transformers.js browser cache where supported.
+- Browser/OS cache eviction can remove model files; re-download may then be required.
+- No cross-device account or cloud sync is implemented.
+
+## 6. Security and reliability requirements
+
+- Never add privileged secrets or API keys to client files.
+- Never claim model inference is online or local unless the selected route says so.
+- Insert user/model/search content through text-safe DOM APIs, not untrusted HTML.
+- Limit attachment sizes and message context.
+- Use explicit external links with noopener noreferrer.
+- Handle missing WebGPU, failed model downloads, storage exhaustion, offline state and browser speech API absence without blanking the chat.
+- Keep project changes isolated from QQCross.
+
+## 7. Implemented vs pending
+
+### Implemented in repository
+- Qwen3.5-0.8B ONNX loading path via Transformers.js.
+- WebGPU detection with WASM fallback attempt.
+- Local text generation and streaming.
+- Image attachment and multimodal processor path.
+- TXT/MD/JSON/CSV text attachment.
+- Local chat history, export and clear.
+- Browser voice dictation and speech synthesis.
+- Keyless Wikipedia search.
+- PWA app-shell caching and basic validation workflow.
+
+### Not yet physically verified
+- First model download and end-to-end inference on HONOR 400.
+- Exact download bytes and retained browser cache after restart/offline.
+- WebGPU stability, generation speed, memory use and thermal behavior on the target phone.
+- Image inference on the target phone.
+- SpeechRecognition support and whether the installed browser uses online speech service.
+- GitHub Pages deployment and real-world mobile layout after this commit.
+
+### Still to build
+- Better memory beyond conversation history.
+- PDF/DOCX parsing and richer document workflows.
+- Broader web search with reliable citations.
+- Robust conversation management, editable memory and user settings.
+- More capable local model profiles if the device can safely run them.
+- Automated browser-level integration tests on a supported mobile device.
+
+## 8. Release gate
+
+A function is not marked complete just because code exists. It must pass static/automated checks and, where hardware matters, a real device test. The first release gate is: load Qwen successfully, answer a multi-turn text conversation, process one image, restore history after reload, and complete an offline test after model/runtime caching.

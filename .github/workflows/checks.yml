@@ -1,0 +1,35 @@
+name: Quantum-AI checks
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'src/**'
+      - 'sw.js'
+      - 'manifest.webmanifest'
+      - 'scripts/**'
+      - 'README.md'
+      - 'docs/**'
+      - '.github/workflows/checks.yml'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/app.js
+          node --check src/quantum-engine.js
+          node --check sw.js
+          node --check scripts/validate.mjs
+      - name: Run static regression checks
+        run: node scripts/validate.mjs

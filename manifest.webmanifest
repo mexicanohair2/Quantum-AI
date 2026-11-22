@@ -1,0 +1,19 @@
+{
+  "name": "Quantum-AI",
+  "short_name": "Quantum-AI",
+  "description": "Локальный ИИ-помощник на базе Qwen",
+  "lang": "ru",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#100b12",
+  "theme_color": "#100b12",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

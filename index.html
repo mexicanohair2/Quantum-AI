@@ -4,224 +4,152 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#100b12">
-<meta name="description" content="Quantum-AI — самостоятельный интеллектуальный помощник.">
+<meta name="description" content="Quantum-AI — локальный ИИ-помощник на базе Qwen.">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
 <title>Quantum-AI</title>
 <style>
-:root{color-scheme:dark;--bg:#100b12;--panel:#19121c;--panel2:#211725;--line:#38283b;--text:#f3edf4;--muted:#a99aaa;--accent:#c58aa8;--accent2:#9274b1;--user:#392433;--assistant:#201925}
+:root{color-scheme:dark;--bg:#100b12;--panel:#19121c;--panel2:#211725;--line:#38283b;--text:#f3edf4;--muted:#a99aaa;--accent:#c58aa8;--accent2:#9274b1;--user:#392433;--assistant:#201925;--good:#79b89b;--warn:#d6b27e;--bad:#d58c86}
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
 body{background:radial-gradient(ellipse at 50% -12%,#46273f 0,transparent 42%),var(--bg);color:var(--text);font:15px/1.55 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
-button,textarea{font:inherit}
+button,textarea,input{font:inherit}
 button{cursor:pointer}
-.app{height:100%;min-height:0;display:flex;flex-direction:column;max-width:1000px;margin:0 auto;padding:0 18px}
-header{height:70px;flex:none;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #ffffff12}
-.brand{display:flex;align-items:center;gap:12px}
-.logo{width:39px;height:39px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(145deg,#8c4c6b,#46304f);box-shadow:inset 0 1px 0 #ffffff35,0 6px 22px #0005;font-size:17px;font-weight:800;letter-spacing:-1px}
+button:disabled{opacity:.45;cursor:not-allowed}
+.app{height:100%;min-height:0;display:flex;flex-direction:column;max-width:1040px;margin:0 auto;padding:0 16px}
+header{height:66px;flex:none;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #ffffff12;gap:10px}
+.brand{display:flex;align-items:center;gap:11px;min-width:0}
+.logo{width:39px;height:39px;flex:none;border-radius:13px;display:grid;place-items:center;background:linear-gradient(145deg,#8c4c6b,#46304f);box-shadow:inset 0 1px 0 #ffffff35,0 6px 22px #0005;font-size:17px;font-weight:800;letter-spacing:-1px}
 .brand-name{font-size:17px;font-weight:750;letter-spacing:.02em}
 .brand-sub{font-size:11px;color:var(--muted);margin-top:1px}
-.header-right{display:flex;align-items:center;gap:14px}
-.status{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px}
-.dot{width:7px;height:7px;border-radius:50%;background:#8a7c8c;box-shadow:0 0 0 3px #8a7c8c20}
-.status.online .dot{background:#79b89b;box-shadow:0 0 0 3px #79b89b20}
-.status.offline .dot{background:#cb8a82;box-shadow:0 0 0 3px #cb8a8220}
-.icon-btn{width:38px;height:38px;border:1px solid var(--line);border-radius:12px;background:#211825;color:#c9bacb;display:grid;place-items:center}
-.icon-btn:active{transform:scale(.97)}
+.header-right{display:flex;align-items:center;gap:8px}
+.status{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:7px;white-space:nowrap}
+.dot{width:7px;height:7px;flex:none;border-radius:50%;background:#8a7c8c;box-shadow:0 0 0 3px #8a7c8c20}
+.status.ready .dot{background:var(--good);box-shadow:0 0 0 3px #79b89b20}
+.status.loading .dot{background:var(--warn);animation:pulse 1s infinite}
+.status.error .dot{background:var(--bad)}
+.icon-btn{width:37px;height:37px;flex:none;border:1px solid var(--line);border-radius:12px;background:#211825;color:#c9bacb;display:grid;place-items:center}
+.icon-btn:active,.send:active,.action-btn:active{transform:scale(.97)}
 main{flex:1;min-height:0;display:flex;flex-direction:column}
-.chat{flex:1;min-height:0;overflow-y:auto;padding:28px 4px 20px;scroll-behavior:smooth}
-.welcome{max-width:650px;margin:8vh auto 0;text-align:center}
-.orb{width:72px;height:72px;border-radius:24px;margin:0 auto 22px;display:grid;place-items:center;background:linear-gradient(145deg,#6b3d59,#35233f);border:1px solid #a46e8b66;box-shadow:0 15px 55px #0006,inset 0 1px 0 #ffffff35;font-size:29px;font-weight:800;letter-spacing:-2px}
-.welcome h1{font-size:clamp(27px,5vw,38px);letter-spacing:-.04em;margin:0 0 10px}
-.welcome p{color:var(--muted);max-width:480px;margin:0 auto 24px}
-.model-pill{display:inline-flex;align-items:center;gap:8px;border:1px solid #594052;background:#241925;color:#d7b5c6;border-radius:99px;padding:6px 12px;font-size:12px}
-.model-pill i{width:6px;height:6px;border-radius:50%;background:#c58aa8}
-.suggestions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-width:570px;margin:28px auto 0;text-align:left}
-.suggestion{border:1px solid var(--line);border-radius:14px;padding:13px 15px;background:#1b141e;color:#d9cedb;text-align:left;font-size:13px;transition:.18s}
-.suggestion:hover{border-color:#76516b;background:#251a27}
-.messages{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
-.message{display:flex;gap:11px;align-items:flex-start;max-width:100%}
+.setup{flex:none;margin:13px 0 0;padding:12px 14px;border:1px solid #594052;background:linear-gradient(120deg,#241925,#1a1420);border-radius:16px;display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:center}
+.setup-copy{min-width:0}
+.setup-title{font-weight:700;font-size:13px}
+.setup-desc{font-size:11px;color:var(--muted);margin-top:2px}
+.model-progress{grid-column:1/-1;height:4px;border-radius:8px;background:#ffffff12;overflow:hidden;display:none}
+.model-progress>span{display:block;width:0;height:100%;background:linear-gradient(90deg,#a76583,#9274b1);transition:width .2s}
+.model-meta{grid-column:1/-1;display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:10px}
+.action-btn{border:1px solid #65465a;border-radius:11px;background:#302031;color:#eadce8;padding:9px 12px;font-size:12px;font-weight:650;white-space:nowrap}
+.action-btn.primary{border:0;background:linear-gradient(145deg,#a76583,#684b7f);color:#fff}
+.chat{flex:1;min-height:0;overflow-y:auto;padding:22px 4px 18px;scroll-behavior:smooth}
+.welcome{max-width:650px;margin:4vh auto 0;text-align:center}
+.orb{width:68px;height:68px;border-radius:23px;margin:0 auto 19px;display:grid;place-items:center;background:linear-gradient(145deg,#6b3d59,#35233f);border:1px solid #a46e8b66;box-shadow:0 15px 55px #0006,inset 0 1px 0 #ffffff35;font-size:27px;font-weight:800;letter-spacing:-2px}
+.welcome h1{font-size:clamp(25px,5vw,36px);letter-spacing:-.04em;margin:0 0 9px}
+.welcome p{color:var(--muted);max-width:500px;margin:0 auto 20px;font-size:13px}
+.chips{display:flex;justify-content:center;flex-wrap:wrap;gap:7px;margin:0 auto;max-width:560px}
+.chip{border:1px solid var(--line);border-radius:99px;padding:6px 10px;color:#cfbdce;background:#1b141e;font-size:11px}
+.messages{max-width:790px;margin:0 auto;display:flex;flex-direction:column;gap:17px}
+.message{display:flex;gap:10px;align-items:flex-start;max-width:100%}
 .message.user{flex-direction:row-reverse}
-.avatar{width:31px;height:31px;flex:none;border-radius:11px;display:grid;place-items:center;background:linear-gradient(145deg,#75445f,#3e2a4b);font-size:11px;font-weight:800;color:#fff}
+.avatar{width:30px;height:30px;flex:none;border-radius:10px;display:grid;place-items:center;background:linear-gradient(145deg,#75445f,#3e2a4b);font-size:10px;font-weight:800;color:#fff}
 .message.user .avatar{background:#4a3043}
-.bubble{max-width:min(84%,680px);padding:12px 15px;border:1px solid var(--line);border-radius:4px 16px 16px 16px;background:var(--assistant);color:#eee6ef;white-space:pre-wrap;overflow-wrap:anywhere}
-.message.user .bubble{border-radius:16px 4px 16px 16px;background:var(--user);border-color:#604054}
+.bubble{max-width:min(88%,700px);padding:11px 14px;border:1px solid var(--line);border-radius:4px 15px 15px 15px;background:var(--assistant);color:#eee6ef;white-space:pre-wrap;overflow-wrap:anywhere}
+.message.user .bubble{border-radius:15px 4px 15px 15px;background:var(--user);border-color:#604054}
+.message-tools{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:7px 0 0 40px}
+.message.user .message-tools{justify-content:flex-end;margin:7px 40px 0 0}
+.source-link{color:#c9a4c6;font-size:11px;text-decoration:none;border-bottom:1px solid #76516b;padding:2px 0}
 .typing{display:flex;gap:5px;align-items:center;padding:8px 2px}
 .typing span{width:6px;height:6px;border-radius:50%;background:#c58aa8;animation:pulse 1s infinite ease-in-out}
 .typing span:nth-child(2){animation-delay:.15s}.typing span:nth-child(3){animation-delay:.3s}
 @keyframes pulse{0%,60%,100%{opacity:.35;transform:translateY(0)}30%{opacity:1;transform:translateY(-4px)}}
-.composer-wrap{flex:none;padding:12px 0 max(18px,env(safe-area-inset-bottom))}
-.composer{max-width:760px;margin:0 auto;border:1px solid #4a354b;background:#1c1520;border-radius:19px;padding:9px 10px 9px 16px;box-shadow:0 12px 36px #0004}
+.composer-wrap{flex:none;padding:8px 0 max(14px,env(safe-area-inset-bottom))}
+.composer{max-width:790px;margin:0 auto;border:1px solid #4a354b;background:#1c1520;border-radius:18px;padding:8px 9px 8px 14px;box-shadow:0 12px 36px #0004}
 .composer:focus-within{border-color:#91627e;box-shadow:0 0 0 3px #bd84a51a,0 12px 36px #0004}
-textarea{display:block;width:100%;resize:none;max-height:150px;min-height:42px;padding:9px 4px;border:0;outline:0;background:transparent;color:var(--text);line-height:1.5}
+textarea{display:block;width:100%;resize:none;max-height:135px;min-height:40px;padding:8px 3px;border:0;outline:0;background:transparent;color:var(--text);line-height:1.5}
 textarea::placeholder{color:#827486}
-.composer-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:5px}
-.hint{font-size:11px;color:#8f8092}
-.send{width:39px;height:39px;border:0;border-radius:13px;background:linear-gradient(145deg,#a76583,#684b7f);color:white;display:grid;place-items:center;box-shadow:0 5px 16px #0005}
-.send:disabled{opacity:.4;cursor:not-allowed}
+.composer-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:4px}
+.tools{display:flex;align-items:center;gap:6px;min-width:0}
+.tool-btn{min-width:34px;height:34px;border:1px solid #463547;border-radius:10px;background:#211825;color:#cbb9cd;display:grid;place-items:center;padding:0 8px;font-size:11px}
+.tool-btn.active{border-color:#93627f;background:#382336;color:#f0dce9}
+.send{width:38px;height:38px;flex:none;border:0;border-radius:12px;background:linear-gradient(145deg,#a76583,#684b7f);color:white;display:grid;place-items:center;box-shadow:0 5px 16px #0005}
 .send svg{width:18px;height:18px}
-.disclaimer{text-align:center;color:#766a7b;font-size:10px;margin-top:7px}
-.error{max-width:760px;margin:0 auto 10px;color:#e3aaa2;font-size:12px;text-align:center}
-@media(max-width:600px){.app{padding:0 12px}header{height:62px}.brand-name{font-size:16px}.status{font-size:11px}.welcome{margin-top:6vh}.suggestions{grid-template-columns:1fr}.chat{padding-top:18px}.bubble{max-width:88%;font-size:14px}.composer{border-radius:17px}.hint{font-size:10px}}
+.hint{font-size:10px;color:#8f8092;white-space:nowrap}
+.disclaimer{text-align:center;color:#766a7b;font-size:10px;margin-top:6px}
+.attachment{display:none;align-items:center;gap:8px;padding:6px 10px;border:1px solid #4a354b;border-radius:11px;margin:0 0 7px;color:#cdbacd;font-size:11px}
+.attachment.visible{display:flex}
+.attachment img{width:40px;height:40px;object-fit:cover;border-radius:7px}
+.attachment-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.remove-attachment{border:0;background:none;color:#cdbacd;font-size:18px;padding:2px 6px}
+.notice{max-width:790px;margin:0 auto 8px;color:var(--muted);font-size:11px;text-align:center;min-height:16px}
+.error-text{color:#e3aaa2}
+.good-text{color:#93c9ab}
+[hidden]{display:none!important}
+@media(max-width:600px){.app{padding:0 11px}header{height:60px}.brand-name{font-size:15px}.brand-sub{font-size:10px}.status{font-size:10px}.setup{grid-template-columns:1fr;margin-top:10px}.setup>.action-btn{grid-row:2;justify-self:start}.model-progress,.model-meta{grid-column:1}.chat{padding-top:17px}.welcome{margin-top:3vh}.bubble{max-width:91%;font-size:14px}.composer{border-radius:16px}.hint{display:none}.tools{gap:5px}.tool-btn{height:33px;min-width:33px}.header-right{gap:5px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 </style>
-
 </head>
 <body>
 <div class="app">
 <header>
   <div class="brand">
     <div class="logo">Q</div>
-    <div><div class="brand-name">Quantum-AI</div><div class="brand-sub">Интеллектуальный помощник</div></div>
+    <div><div class="brand-name">Quantum-AI</div><div class="brand-sub">Локальный ИИ на базе Qwen</div></div>
   </div>
   <div class="header-right">
-    <div class="status" id="status"><span class="dot"></span><span id="statusText">Подключение…</span></div>
+    <div class="status" id="status"><span class="dot"></span><span id="statusText">Модель не загружена</span></div>
+    <button class="icon-btn" id="exportBtn" title="Экспортировать диалог" aria-label="Экспортировать диалог">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 3v12m-4-4 4 4 4-4M5 17v4h14v-4"/></svg>
+    </button>
     <button class="icon-btn" id="clearBtn" title="Очистить диалог" aria-label="Очистить диалог">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m4 4v6m6-6v6"/></svg>
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m4 4v6m5-6v6"/></svg>
     </button>
   </div>
 </header>
 <main>
+  <section class="setup" id="setupPanel">
+    <div class="setup-copy">
+      <div class="setup-title" id="setupTitle">Подключить локальную Qwen</div>
+      <div class="setup-desc" id="setupDesc">После первой загрузки модель запускается на устройстве. Облачный ИИ и API-ключи не используются.</div>
+    </div>
+    <button class="action-btn primary" id="loadModelBtn">Загрузить модель</button>
+    <div class="model-progress" id="modelProgress"><span id="modelProgressBar"></span></div>
+    <div class="model-meta"><span id="progressText">Qwen3.5-0.8B · ONNX · q4</span><span id="progressPercent">Первая загрузка ≈ 700 МБ</span></div>
+  </section>
   <section class="chat" id="chat" aria-live="polite">
     <div class="welcome" id="welcome">
       <div class="orb">Q</div>
-      <h1>Чем займёмся?</h1>
-      <p>Quantum-AI создаётся как самостоятельная языковая модель. Интерфейс готовится к подключению собственного ядра после обучения и проверки.</p>
-      <div class="model-pill"><i></i> Собственная модель — этап разработки</div>
-      <div class="suggestions">
-        <button class="suggestion">Объясни сложную тему простыми словами</button>
-        <button class="suggestion">Помоги придумать и спланировать проект</button>
-        <button class="suggestion">Напиши и проверь код</button>
-        <button class="suggestion">Разбери задачу по шагам</button>
-      </div>
+      <h1>Quantum-AI</h1>
+      <p>Локальный помощник на базе Qwen. Загрузи модель один раз, чтобы начать общение. Сообщения обрабатываются на устройстве, а история хранится в браузере.</p>
+      <div class="chips"><span class="chip">Локальный чат</span><span class="chip">Анализ изображений</span><span class="chip">Текстовые файлы</span><span class="chip">Голос</span><span class="chip">Поиск Wikipedia</span></div>
     </div>
     <div class="messages" id="messages"></div>
   </section>
-  <div class="error" id="error" role="status"></div>
+  <div class="notice" id="notice" role="status"></div>
   <div class="composer-wrap">
     <div class="composer">
-      <textarea id="prompt" rows="1" maxlength="4000" placeholder="Напиши сообщение…" aria-label="Сообщение"></textarea>
+      <div class="attachment" id="attachment">
+        <img id="attachmentPreview" alt="" hidden>
+        <span class="attachment-name" id="attachmentName"></span>
+        <button class="remove-attachment" id="removeAttachment" aria-label="Убрать вложение">×</button>
+      </div>
+      <textarea id="prompt" rows="1" maxlength="8000" placeholder="Сначала загрузи модель Qwen…" aria-label="Сообщение" disabled></textarea>
       <div class="composer-bottom">
-        <span class="hint">Enter — отправить · Shift + Enter — новая строка</span>
+        <div class="tools">
+          <button class="tool-btn" id="attachBtn" title="Прикрепить изображение или текстовый файл" aria-label="Прикрепить файл">＋</button>
+          <button class="tool-btn" id="micBtn" title="Голосовой ввод" aria-label="Голосовой ввод">⌁</button>
+          <button class="tool-btn" id="searchBtn" title="Искать по Wikipedia без API-ключа" aria-label="Поиск по Wikipedia">Поиск</button>
+          <button class="tool-btn" id="speakBtn" title="Озвучить последний ответ" aria-label="Озвучить ответ">Звук</button>
+          <input id="fileInput" type="file" accept="image/*,.txt,.md,.json,.csv" hidden>
+        </div>
+        <span class="hint">Enter — отправить</span>
         <button class="send" id="sendBtn" aria-label="Отправить" disabled>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 14-7-5 14-2-6-7-1Z"/><path d="m12 13 7-8"/></svg>
         </button>
       </div>
     </div>
-    <div class="disclaimer">Quantum-AI · самостоятельная разработка</div>
+    <div class="disclaimer">Модель выполняется локально · Qwen3.5-0.8B · История только в этом браузере</div>
   </div>
 </main>
 </div>
-<script>
-(() => {
-  const STORAGE = "quantum-ai-chat-v1";
-  const chat = document.getElementById("chat");
-  const messagesEl = document.getElementById("messages");
-  const welcome = document.getElementById("welcome");
-  const input = document.getElementById("prompt");
-  const sendBtn = document.getElementById("sendBtn");
-  const errorEl = document.getElementById("error");
-  const statusEl = document.getElementById("status");
-  const statusText = document.getElementById("statusText");
-  let messages = [];
-  let busy = false;
-
-  function persist() {
-    try { localStorage.setItem(STORAGE, JSON.stringify(messages.slice(-40))); } catch {}
-  }
-  function scrollBottom() { chat.scrollTop = chat.scrollHeight; }
-  function addMessage(role, content) {
-    const row = document.createElement("div");
-    row.className = "message " + role;
-    const avatar = document.createElement("div");
-    avatar.className = "avatar";
-    avatar.textContent = role === "user" ? "Я" : "Q";
-    const bubble = document.createElement("div");
-    bubble.className = "bubble";
-    bubble.textContent = content;
-    row.append(avatar, bubble);
-    messagesEl.appendChild(row);
-    welcome.style.display = "none";
-    scrollBottom();
-    return row;
-  }
-  function showTyping() {
-    const row = document.createElement("div");
-    row.className = "message assistant";
-    row.id = "typing";
-    const avatar = document.createElement("div");
-    avatar.className = "avatar";
-    avatar.textContent = "Q";
-    const bubble = document.createElement("div");
-    bubble.className = "bubble";
-    bubble.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
-    row.append(avatar,bubble);
-    messagesEl.appendChild(row);
-    scrollBottom();
-  }
-  function renderSaved() {
-    for (const m of messages) if (m.role === "user" || m.role === "assistant") addMessage(m.role,m.content);
-    if (!messages.length) welcome.style.display = "";
-  }
-  try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE) || "[]");
-    if (Array.isArray(saved)) messages = saved.filter(m => m && ["user","assistant"].includes(m.role) && typeof m.content === "string").slice(-40);
-  } catch { messages = []; }
-  renderSaved();
-
-  statusText.textContent = "Ядро в разработке";
-
-  function setBusy(value) {
-    busy = value;
-    sendBtn.disabled = value || !input.value.trim();
-    input.disabled = value;
-  }
-  function resizeInput() {
-    input.style.height = "auto";
-    input.style.height = Math.min(input.scrollHeight,150) + "px";
-    sendBtn.disabled = busy || !input.value.trim();
-  }
-  input.addEventListener("input",resizeInput);
-  input.addEventListener("keydown",e => {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
-  });
-  document.querySelectorAll(".suggestion").forEach(btn => btn.addEventListener("click",() => {
-    input.value = btn.textContent; resizeInput(); input.focus(); send();
-  }));
-  document.getElementById("clearBtn").addEventListener("click",() => {
-    if (busy) return;
-    messages = [];
-    persist();
-    messagesEl.replaceChildren();
-    welcome.style.display = "";
-    errorEl.textContent = "";
-  });
-
-  async function send() {
-    const text = input.value.trim();
-    if (!text || busy) return;
-    if (text.length > 4000) { errorEl.textContent = "Сообщение слишком длинное."; return; }
-    errorEl.textContent = "";
-    input.value = "";
-    resizeInput();
-    messages.push({role:"user",content:text});
-    const userRow = addMessage("user",text);
-    persist();
-    setBusy(true);
-    showTyping();
-    try {
-      throw new Error("Собственное ядро Quantum-AI ещё не интегрировано в веб-чат. Внешние языковые модели отключены.");
-    } catch (err) {
-      errorEl.textContent = err.message || "Ошибка соединения. Попробуй ещё раз.";
-      messages.pop();
-      userRow.remove();
-      if (!messages.length) welcome.style.display = "";
-      persist();
-    } finally {
-      document.getElementById("typing")?.remove();
-      setBusy(false);
-      input.focus();
-    }
-  }
-  sendBtn.addEventListener("click",send);
-})();
-</script>
+<script type="module" src="./src/app.js"></script>
 </body>
 </html>
