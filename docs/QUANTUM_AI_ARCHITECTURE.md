@@ -27,7 +27,7 @@
 - `worker/index.mjs` — Cloudflare Worker, обработка чата, CORS, проверка сообщений, вызовы модели и веб-поиска.
 - `wrangler.toml` — отдельная конфигурация Worker `quantum-ai-chat-api`, AI binding и публичные параметры Supabase.
 - `supabase/functions/qqcross-ai-neuron-quota/index.ts` в репозитории QQCross — JWT-защищённая Edge Function, которая выполняет операции с личной квотой.
-- `tests/worker-smoke.mjs` — тесты прямого ответа, tool-calling, источников, CORS и дневного лимита.
+- `tests/worker-smoke.mjs` — тесты прямого ответа, tool-calling, источников, восстановления после сбоя поиска, CORS и дневного лимита.
 
 Маршрутизация моделей:
 - Все сообщения — текст, изображения и синтез после веб-поиска — обрабатывает одна модель: `@cf/qwen/qwen3.8-27b`.
@@ -82,4 +82,4 @@ Cloudflare Workers AI предоставляет общую квоту 10 000 Ne
 - CORS, ошибки и дневной резерв;
 - сохранение истории и мобильный UI.
 
-GitHub Actions run #100 для PR #3 и commit `008877078f4307e83dacd983c20f2a7d8fe52510` завершился успешно: JavaScript syntax, static regression checks, assistant-tool tests, per-player quota/backend smoke tests и clean chat browser smoke test. Тестовые ответы подменяются заглушками и не подтверждают реальную генерацию. Отдельно требуется проверить опубликованный endpoint, реальные ответы Workers AI, keyless-поиск и страницу на Android.
+GitHub Actions run #104 для PR #3 и commit `4ff66a8f3665d456d579f9398094884d89c8460a` завершился успешно: JavaScript syntax, static regression checks, assistant-tool tests, per-player quota/backend smoke tests и clean chat browser smoke test. Дополнительный тест подтверждает, что HTTP-ошибка веб-поиска передаётся Qwen и не обрывает генерацию. Тестовые ответы подменяются заглушками и не подтверждают реальную генерацию. Отдельно требуется проверить опубликованный endpoint, реальные ответы Workers AI, keyless-поиск и страницу на Android.
