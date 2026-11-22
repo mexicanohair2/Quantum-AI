@@ -6,6 +6,7 @@ const originalFetch = globalThis.fetch;
 const userId = "8b90b6c7-1e36-4fd5-8a6c-123456789012";
 const reservationId = "f0d5c2e3-1c4b-4e80-a72d-123456789012";
 let searchCalls = 0;
+let searchMode = "success";
 let reserveCalls = [];
 let settleCalls = [];
 let authMode = "valid";
@@ -19,7 +20,7 @@ function makeRequest(messages, options = {}) {
       Authorization: options.authorization ?? "Bearer player-session-token",
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ messages })
+    body: JSON.stringify({ messages, ...(options.imageDataUrl ? { imageDataUrl: options.imageDataUrl } : {}) })
   });
 }
 
@@ -28,8 +29,9 @@ const env = {
   SUPABASE_PUBLISHABLE_KEY: "sb_publishable_test",
   AI: {
     async run(model, options) {
-      assert.equal(model, "@cf/zai-org/glm-4.7-flash");
-      assert.equal(options.max_completion_tokens, 192);
+      assert.equal(model, "@cf/qwen/qwen3.8-27b");
+      assert.equal(options.max_completion_tokens, 2048);
+      assert.equal(options.reasoning_effort, "medium");
       assert.equal(options.tool_choice, "auto");
       assert.equal(options.tools[0].name, "web_search");
       return {
@@ -94,6 +96,7 @@ try {
       searchCalls += 1;
       const body = JSON.parse(options.body);
       assert.equal(body.query, "Последние новости о космосе");
+      if (searchMode === "failure") return new Response("Search unavailable", { status: 503 });
       return Response.json({
         results: [{
           title: "Проверяемый источник",
@@ -109,11 +112,15 @@ try {
   const messages = [{ role: "user", content: "Привет" }];
   assert.ok(estimateReservation(normalizeMessages(messages)) > 0);
   assert.ok(estimateReservation(normalizeMessages(messages)) < 10000);
+  const imageReservation = estimateReservation(normalizeMessages(messages), true);
+  assert.ok(imageReservation > estimateReservation(normalizeMessages(messages)));
+  assert.ok(imageReservation >= 3810, "vision reservation must cover two Qwen calls with 32k image tokens and 2048 output tokens each");
 
   const directResponse = await worker.fetch(makeRequest(messages), env);
   assert.equal(directResponse.status, 200);
   const directData = await directResponse.json();
   assert.equal(directData.reply, "Привет. Чем могу помочь?");
+  assert.equal(directData.model, "@cf/qwen/qwen3.8-27b", "text-only turns must use the same Qwen model as image turns");
   assert.equal(directData.quota.limit, 10000);
   assert.equal(directData.quota.remaining, 9900 - settleCalls[0].actualNeurons);
   assert.equal(reserveCalls[0].action, "reserve");
@@ -126,6 +133,9 @@ try {
   env.AI = {
     async run(model, options) {
       modelCalls += 1;
+      assert.equal(model, "@cf/qwen/qwen3.8-27b", "tool-calling turns must use Qwen");
+      assert.equal(options.max_completion_tokens, 2048);
+      assert.equal(options.reasoning_effort, "medium");
       if (modelCalls === 1) {
         assert.equal(options.tools.length, 1);
         return {
@@ -159,6 +169,75 @@ try {
   assert.equal(toolData.sources[0].url, "https://example.org/space");
   assert.equal(modelCalls, 2);
   assert.equal(searchCalls, 1);
+
+  searchMode = "failure";
+  let fallbackCalls = 0;
+  env.AI = {
+    async run(model, options) {
+      fallbackCalls += 1;
+      assert.equal(model, "@cf/qwen/qwen3.8-27b");
+      if (fallbackCalls === 1) {
+        return {
+          response: "",
+          tool_calls: [{
+            id: "call_search_failure",
+            name: "web_search",
+            arguments: { query: "Последние новости о космосе", topic: "news" }
+          }],
+          usage: { prompt_tokens: 400, completion_tokens: 18 }
+        };
+      }
+      const toolMessage = options.messages.find((message) => message.role === "tool");
+      assert.ok(toolMessage, "Qwen must receive the failed search result");
+      const toolResult = JSON.parse(toolMessage.content);
+      assert.match(toolResult.error, /поиск/i);
+      return {
+        response: "Поиск сейчас недоступен, поэтому актуальность сведений не проверена.",
+        usage: { prompt_tokens: 500, completion_tokens: 24 }
+      };
+    }
+  };
+  const fallbackResponse = await worker.fetch(
+    makeRequest([{ role: "user", content: "Что нового в космосе?" }]),
+    env
+  );
+  assert.equal(fallbackResponse.status, 200, "a temporary search outage must not discard the model's answer");
+  const fallbackData = await fallbackResponse.json();
+  assert.match(fallbackData.reply, /Поиск сейчас недоступен/);
+  assert.deepEqual(fallbackData.sources, []);
+  assert.equal(fallbackCalls, 2);
+  searchMode = "success";
+
+  const imageDataUrl = "data:image/jpeg;base64,/9j/2Q==";
+  env.AI = {
+    async run(model, options) {
+      assert.equal(model, "@cf/qwen/qwen3.8-27b");
+      assert.equal(options.max_completion_tokens, 2048);
+      assert.equal(options.reasoning_effort, "medium");
+      const userMessage = options.messages.find((message) => message.role === "user");
+      assert.ok(Array.isArray(userMessage.content));
+      assert.equal(userMessage.content[1].type, "image_url");
+      assert.equal(userMessage.content[1].image_url.url, imageDataUrl);
+      return {
+        response: "На изображении виден объект.",
+      };
+    }
+  };
+  const imageResponse = await worker.fetch(
+    makeRequest([{ role: "user", content: "Что изображено?" }], { imageDataUrl }),
+    env
+  );
+  assert.equal(imageResponse.status, 200);
+  const imageData = await imageResponse.json();
+  assert.equal(imageData.reply, "На изображении виден объект.");
+  assert.equal(imageData.model, "@cf/qwen/qwen3.8-27b");
+  assert.ok(settleCalls.at(-1).actualNeurons >= 1300, "image inference without usage metadata must include reserved image tokens");
+
+  const invalidImageResponse = await worker.fetch(
+    makeRequest([{ role: "user", content: "Проверь фото" }], { imageDataUrl: "data:image/svg+xml;base64,PHN2Zz4=" }),
+    env
+  );
+  assert.equal(invalidImageResponse.status, 400);
 
   const balanceResponse = await worker.fetch(
     new Request("https://quantum-ai-chat-api.example.workers.dev/api/balance", {
