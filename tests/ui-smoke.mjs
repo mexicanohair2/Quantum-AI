@@ -1,49 +1,30 @@
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
-
-const browser = await chromium.launch({ headless: true });
-const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
-
-try {
-  await page.goto("http://127.0.0.1:4173/", { waitUntil: "networkidle" });
-  assert.equal(await page.title(), "Quantum-AI");
-  assert.equal(await page.locator("#sendBtn").isDisabled(), true);
-  assert.equal((await page.locator("body").innerText()).includes("Qwen"), false);
-  assert.equal(await page.locator("#webSearchNav").count(), 0);
-  assert.equal(await page.locator("#searchView").count(), 0);
-  assert.equal(await page.locator("#chatNav").isVisible(), true);
-  assert.ok((await page.locator("#chatNotice").innerText()).includes("ассистент сможет сам вызывать веб-поиск"));
-
-  await page.locator("#newChatBtn").click();
-  assert.equal(await page.locator("#historyCount").textContent(), "1");
-  assert.equal(await page.locator("#chatHistory .history-item").count(), 1);
-
-  page.once("dialog", (dialog) => dialog.accept("Проверочный чат"));
-  await page.locator('#chatHistory [data-action="rename"]').click();
-  await page.getByText("Проверочный чат").first().waitFor();
-
-  await page.locator("#chatFilter").fill("не существует");
-  assert.equal(await page.locator("#chatHistory .history-item").count(), 0);
-  await page.locator("#chatFilter").fill("Проверочный");
-  assert.equal(await page.locator("#chatHistory .history-item").count(), 1);
-  await page.locator("#chatHistory [data-action='open']").click();
-
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.locator("#menuBtn").click();
-  assert.equal(await page.locator("#sidebar").evaluate((node) => node.classList.contains("open")), true);
-  const width = await page.evaluate(() => document.documentElement.scrollWidth);
-  assert.ok(width <= 390, "mobile layout must not overflow horizontally");
-  await page.locator("#closeSidebarBtn").click();
-  assert.equal(await page.locator("#sidebar").evaluate((node) => node.classList.contains("open")), false);
-
-  await page.reload({ waitUntil: "networkidle" });
-  assert.equal(await page.locator("#historyCount").textContent(), "1");
-  await page.locator("#menuBtn").click();
-  page.once("dialog", (dialog) => dialog.accept());
-  await page.locator('#chatHistory [data-action="delete"]').click();
-  assert.equal(await page.locator("#historyCount").textContent(), "0");
-
-  console.log("Quantum-AI chat-first browser smoke test passed.");
-} finally {
-  await browser.close();
-}
+const browser=await chromium.launch({headless:true});
+const page=await browser.newPage({viewport:{width:390,height:844}});
+try{
+ await page.goto("http://127.0.0.1:4173/",{waitUntil:"networkidle"});
+ assert.equal(await page.title(),"Quantum-AI");
+ assert.equal(await page.locator("#prompt").isDisabled(),false);
+ assert.equal(await page.locator("#sendBtn").isDisabled(),true);
+ assert.equal(await page.locator("#clearBtn").count(),0);
+ assert.equal(await page.locator("#exportBtn").count(),0);
+ assert.equal(await page.locator("#chatNotice").count(),0);
+ assert.equal(await page.locator("#serviceStatus").count(),0);
+ await page.locator("#prompt").fill("Привет");
+ assert.equal(await page.locator("#sendBtn").isDisabled(),false);
+ await page.locator("#sendBtn").click();
+ await page.locator("#chatError").waitFor({state:"visible"});
+ assert.ok((await page.locator("#chatError").innerText()).includes("сервер ИИ ещё не подключён"));
+ assert.equal(await page.locator("#prompt").inputValue(),"Привет");
+ await page.locator("#newChatBtn").click();
+ assert.equal(await page.locator("#historyCount").count(),0);
+ assert.equal(await page.locator("#chatHistory .history-item").count(),2);
+ await page.locator("#menuBtn").click();
+ assert.equal(await page.locator("#sidebar").evaluate(n=>n.classList.contains("open")),true);
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=390));
+ await page.locator("#closeSidebarBtn").click();
+ await page.reload({waitUntil:"networkidle"});
+ assert.equal(await page.locator("#chatHistory .history-item").count(),2);
+ console.log("Quantum-AI clean chat browser smoke test passed.");
+}finally{await browser.close();}
