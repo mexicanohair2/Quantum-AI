@@ -2,15 +2,22 @@
 
 Quantum-AI is the assistant planned for integration into QQCross, replacing the current encyclopedia experience. It uses the player's existing, email-confirmed QQCross account.
 
-## Live app
+## QQCross integration
+
+The target experience is inside QQCross, replacing the encyclopedia tab:
+
+https://mexicanohair2.github.io/QQCross/
+
+The separate Quantum-AI Pages site remains a development preview, not a second account or a separate product:
 
 https://mexicanohair2.github.io/Quantum-AI/
 
 ## Product behavior
 
-- One chat screen: conversation and message composer.
-- Chat history is available in the side panel.
-- No separate search page, service-status banner, export/clear buttons, or decorative information cards.
+- The QQCross encyclopedia tab becomes one chat screen with conversation and message composer.
+- The existing confirmed QQCross email session is reused; there is no second registration.
+- Chat history is isolated by Supabase Auth user ID and stored locally on that browser.
+- The composer supports text and compressed JPG/PNG/WebP images.
 - The assistant answers directly when it can and uses model-controlled web search only when current or externally verifiable information is needed.
 - Search is an internal assistant tool, not a separate user-facing mode.
 
@@ -21,12 +28,14 @@ https://mexicanohair2.github.io/Quantum-AI/
 - Server-side Worker implementation: prepared in `worker/index.mjs`.
 - Model tool-calling loop: implemented in source; the model can call `web_search`, receive results, and compose the final answer.
 - Per-player 10,000-neuron daily allowance: implemented in QQCross Supabase with atomic reservations and settlement.
-- Automated backend smoke tests: added.
-- **Live inference is not yet deployed or connected.** The frontend endpoint remains unset, so the interface does not fabricate answers.
+- Automated backend and browser smoke tests: passing in GitHub Actions on the feature branches.
+- The Qwen vision path has a separate 2,048-token completion budget and medium reasoning effort; its reservation calculation is covered by regression tests.
+- QQCross chat UI and Worker client integration are prepared on feature branches.
+- **Live inference is not yet deployed.** The Worker endpoint is configured in the QQCross UI but will remain unavailable until the separate Worker is deployed after billing checks.
 
 ## Backend and cost safety
 
-The planned inference model is Cloudflare-hosted GLM-4.7-Flash. Cloudflare documents multilingual dialogue, function calling, and availability on Workers Free. The Worker uses the built-in AI binding; no provider API key is placed in the browser.
+Text-only turns use Cloudflare-hosted GLM-4.7-Flash. Image turns route to Qwen 3.8 27B, whose Cloudflare model page documents vision and function calling. Model-specific neuron rates are used for reservation and settlement. The Worker uses the built-in AI binding; no provider API key is placed in the browser.
 
 QQCross stores an independent 10,000-neuron daily allowance for each confirmed player, keyed by the stable Supabase Auth UUID. Cloudflare still applies its own separate 10,000-neuron daily free allocation to the entire Cloudflare account. Personal player quotas do not create separate Cloudflare free quotas.
 
@@ -34,8 +43,8 @@ The connected Cloudflare OAuth session cannot read Billing Profile or subscripti
 
 ## Privacy
 
-- Chat history is stored in this browser and is not synchronized between devices.
-- When inference is connected, message content will be sent to Cloudflare Workers AI.
+- Chat history is stored locally per QQCross account on this browser and is not synchronized between devices.
+- Text and any image the player attaches are sent to the Quantum-AI Worker for inference.
 - When the assistant calls web search, only the search query and not the full chat history is sent to the search provider.
 - The public frontend contains no model-provider secret.
 
@@ -45,5 +54,7 @@ The connected Cloudflare OAuth session cannot read Billing Profile or subscripti
 - Browser history persistence: implemented.
 - Worker backend source and automated tests: implemented in repository.
 - Supabase quota Edge Function: deployed with JWT verification. Cloudflare Worker deployment and QQCross UI connection: pending Billing Read verification.
-- QQCross encyclopedia replacement UI and end-to-end live inference: not yet integrated.
+- QQCross encyclopedia replacement UI: implemented on branch `feature/quantum-ai-chat`; PR #110 is draft and its mobile/desktop browser checks passed.
+- Quantum-AI text/image routing: implemented on branch `feature/qqcross-chat-vision`; PR #1 is draft and its backend/browser CI passed.
+- Cloudflare Worker deployment and end-to-end live inference: blocked pending Billing Read verification and explicit cost approval.
 - Real Android-device testing: pending.
