@@ -32,5 +32,5 @@ assert.ok(sw.includes("caches.delete"));
 assert.ok(!sw.includes("addAll("));
 assert.ok(manifest.includes("Quantum-AI"));
 assert.ok(readme.includes("model-controlled"));
-assert.ok(architecture.includes("Модель анализирует запрос"));
+assert.ok(architecture.includes("модель должна сама выбирать"));
 console.log("Quantum-AI minimal chat UI checks passed.");
