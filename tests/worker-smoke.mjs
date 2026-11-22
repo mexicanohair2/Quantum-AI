@@ -172,7 +172,6 @@ try {
       assert.equal(userMessage.content[1].image_url.url, imageDataUrl);
       return {
         response: "На изображении виден объект.",
-        usage: { prompt_tokens: 1200, completion_tokens: 24 }
       };
     }
   };
@@ -184,6 +183,7 @@ try {
   const imageData = await imageResponse.json();
   assert.equal(imageData.reply, "На изображении виден объект.");
   assert.equal(imageData.model, "@cf/qwen/qwen3.8-27b");
+  assert.ok(settleCalls.at(-1).actualNeurons >= 1300, "image inference without usage metadata must include reserved image tokens");
 
   const invalidImageResponse = await worker.fetch(
     makeRequest([{ role: "user", content: "Проверь фото" }], { imageDataUrl: "data:image/svg+xml;base64,PHN2Zz4=" }),
