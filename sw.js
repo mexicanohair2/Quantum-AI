@@ -1,9 +1,9 @@
-const SHELL_CACHE = "quantum-ai-shell-v3";
+const SHELL_CACHE = "quantum-ai-shell-v4-no-model";
 const APP_FILES = [
   "./",
   "./index.html",
-  "./styles.css?v=20261122-qq-workspace-1",
-  "./src/app.js?v=20261122-chat-ui-1",
+  "./styles.css?v=20261122-no-model-2",
+  "./src/app.js?v=20261122-no-model-2",
   "./src/web-search.js",
   "./manifest.webmanifest",
   "./icon.svg"
@@ -29,20 +29,35 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
-  const url = new URL(event.request.url);
+  const request = event.request;
+  if (request.method !== "GET") return;
+  const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request).then((response) => {
+  const freshFirst = request.mode === "navigate" ||
+    request.destination === "script" ||
+    request.destination === "style";
+
+  if (freshFirst) {
+    event.respondWith(
+      fetch(request).then((response) => {
         if (response && response.ok) {
           const copy = response.clone();
-          caches.open(SHELL_CACHE).then((cache) => cache.put(event.request, copy));
+          caches.open(SHELL_CACHE).then((cache) => cache.put(request, copy));
         }
         return response;
-      }).catch(() => caches.match("./index.html"));
-    })
+      }).catch(() => caches.match(request).then((cached) => cached || caches.match("./index.html")))
+    );
+    return;
+  }
+
+  event.respondWith(
+    caches.match(request).then((cached) => cached || fetch(request).then((response) => {
+      if (response && response.ok) {
+        const copy = response.clone();
+        caches.open(SHELL_CACHE).then((cache) => cache.put(request, copy));
+      }
+      return response;
+    }))
   );
 });
