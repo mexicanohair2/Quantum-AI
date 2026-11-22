@@ -18,6 +18,7 @@ try{
  assert.ok((await page.locator("#chatError").innerText()).includes("сервер ИИ ещё не подключён"));
  assert.equal(await page.locator("#prompt").inputValue(),"Привет");
  assert.equal(await page.locator("#chatHistory .history-item").count(),0);
+ await page.locator("#menuBtn").click();
  await page.locator("#newChatBtn").click();
  assert.equal(await page.locator("#chatHistory .history-item").count(),1);
  await page.locator("#menuBtn").click();
