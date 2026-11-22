@@ -28,7 +28,7 @@ https://mexicanohair2.github.io/Quantum-AI/
 - Server-side Worker implementation: prepared in `worker/index.mjs`.
 - Model tool-calling loop: implemented in source; the model can call `web_search`, receive results, and compose the final answer.
 - Per-player 10,000-neuron daily allowance: implemented in QQCross Supabase with atomic reservations and settlement.
-- Automated backend and browser smoke tests: passing in GitHub Actions on the feature branches.
+- Automated backend and browser smoke tests: passing in GitHub Actions run #104, including recovery when web search returns an HTTP error.
 - All text, image, and web-search synthesis turns use the same Qwen 3.8 27B model with a 2,048-token completion budget and medium reasoning effort; one model-specific reservation/settlement path covers every turn.
 - QQCross chat UI and Worker client integration are prepared on feature branches.
 - **Live inference is not yet deployed.** The Worker endpoint is configured in the QQCross UI but will remain unavailable until the separate Worker is deployed after billing checks.
@@ -55,6 +55,6 @@ The connected Cloudflare OAuth session cannot read Billing Profile or subscripti
 - Worker backend source and automated tests: implemented in repository.
 - Supabase quota Edge Function: deployed with JWT verification. Cloudflare Worker deployment and QQCross UI connection: pending Billing Read verification.
 - QQCross encyclopedia replacement UI: implemented on branch `feature/quantum-ai-chat`; PR #110 is draft and its mobile/desktop browser checks passed.
-- Qwen-only Quantum-AI backend (text, image, web-search tool cycle): implemented on branch `feature/qwen-single-model`; PR #3 is draft and GitHub Actions run #100 passed syntax, static, backend, and browser smoke checks.
+- Qwen-only Quantum-AI backend (text, image, web-search tool cycle): implemented on branch `feature/qwen-single-model`; PR #3 is draft and GitHub Actions run #104 passed syntax, static, backend, and browser smoke checks. It also verifies that a temporary web-search outage is returned to Qwen for an honest answer rather than aborting the entire request.
 - Cloudflare Worker deployment and end-to-end live inference: blocked because the connected OAuth session returns 403 for Billing Profile, usage, and subscriptions; the account plan and remaining account-wide allowance cannot be verified. No Worker has been deployed and no live model call has been made.
 - Real Android-device testing: pending.
