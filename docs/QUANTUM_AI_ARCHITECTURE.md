@@ -27,6 +27,7 @@
 Файлы:
 - `worker/index.mjs` — Cloudflare Worker, обработка чата, CORS, проверка сообщений, вызовы модели и веб-поиска.
 - `wrangler.toml` — отдельная конфигурация Worker `quantum-ai-chat-api`, AI binding и публичные параметры Supabase.
+- `supabase/functions/qqcross-ai-neuron-quota/index.ts` в репозитории QQCross — JWT-защищённая Edge Function, которая выполняет операции с личной квотой.
 - `tests/worker-smoke.mjs` — тесты прямого ответа, tool-calling, источников, CORS и дневного лимита.
 
 Кандидат модели: `@cf/zai-org/glm-4.7-flash`. Документация Cloudflare указывает многоязычный диалог и function calling. Модель вызывается через `env.AI.run()`; ключ API провайдера не нужен.
