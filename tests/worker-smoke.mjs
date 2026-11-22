@@ -6,6 +6,7 @@ const originalFetch = globalThis.fetch;
 const userId = "8b90b6c7-1e36-4fd5-8a6c-123456789012";
 const reservationId = "f0d5c2e3-1c4b-4e80-a72d-123456789012";
 let searchCalls = 0;
+let searchMode = "success";
 let reserveCalls = [];
 let settleCalls = [];
 let authMode = "valid";
@@ -95,6 +96,7 @@ try {
       searchCalls += 1;
       const body = JSON.parse(options.body);
       assert.equal(body.query, "Последние новости о космосе");
+      if (searchMode === "failure") return new Response("Search unavailable", { status: 503 });
       return Response.json({
         results: [{
           title: "Проверяемый источник",
@@ -167,6 +169,44 @@ try {
   assert.equal(toolData.sources[0].url, "https://example.org/space");
   assert.equal(modelCalls, 2);
   assert.equal(searchCalls, 1);
+
+  searchMode = "failure";
+  let fallbackCalls = 0;
+  env.AI = {
+    async run(model, options) {
+      fallbackCalls += 1;
+      assert.equal(model, "@cf/qwen/qwen3.8-27b");
+      if (fallbackCalls === 1) {
+        return {
+          response: "",
+          tool_calls: [{
+            id: "call_search_failure",
+            name: "web_search",
+            arguments: { query: "Последние новости о космосе", topic: "news" }
+          }],
+          usage: { prompt_tokens: 400, completion_tokens: 18 }
+        };
+      }
+      const toolMessage = options.messages.find((message) => message.role === "tool");
+      assert.ok(toolMessage, "Qwen must receive the failed search result");
+      const toolResult = JSON.parse(toolMessage.content);
+      assert.match(toolResult.error, /поиск/i);
+      return {
+        response: "Поиск сейчас недоступен, поэтому актуальность сведений не проверена.",
+        usage: { prompt_tokens: 500, completion_tokens: 24 }
+      };
+    }
+  };
+  const fallbackResponse = await worker.fetch(
+    makeRequest([{ role: "user", content: "Что нового в космосе?" }]),
+    env
+  );
+  assert.equal(fallbackResponse.status, 200, "a temporary search outage must not discard the model's answer");
+  const fallbackData = await fallbackResponse.json();
+  assert.match(fallbackData.reply, /Поиск сейчас недоступен/);
+  assert.deepEqual(fallbackData.sources, []);
+  assert.equal(fallbackCalls, 2);
+  searchMode = "success";
 
   const imageDataUrl = "data:image/jpeg;base64,/9j/2Q==";
   env.AI = {
