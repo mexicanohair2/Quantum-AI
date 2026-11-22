@@ -36,6 +36,6 @@ assert.ok(sw.includes("caches.delete"));
 assert.ok(!sw.includes("addAll("));
 assert.ok(manifest.includes("Quantum-AI"));
 assert.ok(readme.includes("model-controlled"));
-assert.ok(architecture.includes("модель решает"));
+assert.ok(architecture.includes("Модель анализирует запрос"));
 
 console.log("Quantum-AI chat-first architecture checks passed.");
