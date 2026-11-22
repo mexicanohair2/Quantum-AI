@@ -31,7 +31,6 @@ jobs:
         run: |
           node --check src/app.js
           node --check src/web-search.js
-          node --check src/quantum-engine.js
           node --check sw.js
           node --check scripts/validate.mjs
           node --check tests/ui-smoke.mjs
