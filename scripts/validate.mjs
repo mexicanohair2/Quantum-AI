@@ -26,7 +26,7 @@ assert.ok(!app.includes("searchWeb"));
 assert.ok(tools.includes('name: "web_search"'));
 assert.ok(tools.includes("executeAssistantTool"));
 assert.ok(tools.includes("After searching, inspect and synthesize"));
-assert.ok(tools.includes("ordinary knowledge or simple conversation"));
+assert.ok(tools.includes("ordinary stable knowledge or simple conversation"));
 assert.ok(!app.includes("searchForm"));
 assert.ok(!app.includes("runWebSearch"));
 assert.ok(search.includes("https://api.tavily.com/search"));
