@@ -44,6 +44,6 @@ The connected Cloudflare OAuth session cannot read Billing Profile or subscripti
 - Clean chat-first UI: implemented in source.
 - Browser history persistence: implemented.
 - Worker backend source and automated tests: implemented in repository.
-- Cloudflare deployment and endpoint connection: pending Billing Read access and secure Worker secret configuration.
+- Supabase quota Edge Function: deployed with JWT verification. Cloudflare Worker deployment and QQCross UI connection: pending Billing Read verification.
 - QQCross encyclopedia replacement UI and end-to-end live inference: not yet integrated.
 - Real Android-device testing: pending.
