@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'index.html'
+      - 'styles.css'
       - 'src/**'
       - 'sw.js'
       - 'manifest.webmanifest'
@@ -21,7 +22,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages-deploy-v2
+  group: pages-deploy-v3
   cancel-in-progress: false
 
 jobs:
