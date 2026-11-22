@@ -7,6 +7,8 @@ on:
       - 'index.html'
       - 'styles.css'
       - 'src/**'
+      - 'worker/**'
+      - 'wrangler.toml'
       - 'sw.js'
       - 'manifest.webmanifest'
       - 'scripts/**'
@@ -32,7 +34,9 @@ jobs:
           node --check src/app.js
           node --check src/web-search.js
           node --check src/assistant-tools.js
+          node --check worker/index.mjs
           node --check tests/assistant-tools.mjs
+          node --check tests/worker-smoke.mjs
           node --check sw.js
           node --check scripts/validate.mjs
           node --check tests/ui-smoke.mjs
@@ -44,8 +48,10 @@ jobs:
           npm pkg set type=module
           npm install --no-save --no-package-lock playwright
           npx playwright install --with-deps chromium
-      - name: Run browser smoke test
+      - name: Run backend and browser smoke tests
         run: |
+          node tests/assistant-tools.mjs
+          node tests/worker-smoke.mjs
           python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/quantum-ai-http.log 2>&1 &
           SERVER_PID=$!
           trap 'kill $SERVER_PID' EXIT
@@ -53,5 +59,4 @@ jobs:
             if curl -fsS http://127.0.0.1:4173/ > /dev/null; then break; fi
             sleep 1
           done
-          node tests/assistant-tools.mjs
           node tests/ui-smoke.mjs
