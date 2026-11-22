@@ -82,4 +82,4 @@ Cloudflare Workers AI предоставляет общую квоту 10 000 Ne
 - CORS, ошибки и дневной резерв;
 - сохранение истории и мобильный UI.
 
-GitHub Actions run #99 для PR #3 и commit `008877078f4307e83dacd983c20f2a7d8fe52510` завершился успешно: JavaScript syntax, static regression checks, assistant-tool tests, per-player quota/backend smoke tests и clean chat browser smoke test. Тестовые ответы подменяются заглушками и не подтверждают реальную генерацию. Отдельно требуется проверить опубликованный endpoint, реальные ответы Workers AI, keyless-поиск и страницу на Android.
+GitHub Actions run #100 для PR #3 и commit `008877078f4307e83dacd983c20f2a7d8fe52510` завершился успешно: JavaScript syntax, static regression checks, assistant-tool tests, per-player quota/backend smoke tests и clean chat browser smoke test. Тестовые ответы подменяются заглушками и не подтверждают реальную генерацию. Отдельно требуется проверить опубликованный endpoint, реальные ответы Workers AI, keyless-поиск и страницу на Android.
