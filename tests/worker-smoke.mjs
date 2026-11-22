@@ -109,7 +109,9 @@ try {
   const messages = [{ role: "user", content: "Привет" }];
   assert.ok(estimateReservation(normalizeMessages(messages)) > 0);
   assert.ok(estimateReservation(normalizeMessages(messages)) < 10000);
-  assert.ok(estimateReservation(normalizeMessages(messages), true) > estimateReservation(normalizeMessages(messages)));
+  const imageReservation = estimateReservation(normalizeMessages(messages), true);
+  assert.ok(imageReservation > estimateReservation(normalizeMessages(messages)));
+  assert.ok(imageReservation >= 3810, "vision reservation must cover two Qwen calls with 32k image tokens and 2048 output tokens each");
 
   const directResponse = await worker.fetch(makeRequest(messages), env);
   assert.equal(directResponse.status, 200);
@@ -165,7 +167,8 @@ try {
   env.AI = {
     async run(model, options) {
       assert.equal(model, "@cf/qwen/qwen3.8-27b");
-      assert.equal(options.max_completion_tokens, 512);
+      assert.equal(options.max_completion_tokens, 2048);
+      assert.equal(options.reasoning_effort, "medium");
       const userMessage = options.messages.find((message) => message.role === "user");
       assert.ok(Array.isArray(userMessage.content));
       assert.equal(userMessage.content[1].type, "image_url");
