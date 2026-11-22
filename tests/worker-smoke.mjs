@@ -26,7 +26,6 @@ function makeRequest(messages, options = {}) {
 const env = {
   SUPABASE_URL: "https://qqcross.supabase.co",
   SUPABASE_PUBLISHABLE_KEY: "sb_publishable_test",
-  SUPABASE_SERVICE_ROLE_KEY: "server-only-test-key",
   AI: {
     async run(model, options) {
       assert.equal(model, "@cf/zai-org/glm-4.7-flash");
@@ -48,12 +47,8 @@ try {
       assert.equal(options.headers.apikey, "sb_publishable_test");
       assert.equal(options.headers.Authorization, "Bearer player-session-token");
       if (authMode === "invalid") return new Response("Unauthorized", { status: 401 });
-      if (authMode === "anonymous") {
-        return Response.json({ id: userId, is_anonymous: true });
-      }
-      if (authMode === "unconfirmed") {
-        return Response.json({ id: userId, email: "player@example.com" });
-      }
+      if (authMode === "anonymous") return Response.json({ id: userId, is_anonymous: true });
+      if (authMode === "unconfirmed") return Response.json({ id: userId, email: "player@example.com" });
       return Response.json({
         id: userId,
         email: "player@example.com",
@@ -61,41 +56,39 @@ try {
         is_anonymous: false
       });
     }
-    if (target.endsWith("/rpc/reserve_qqcross_ai_neurons")) {
-      assert.equal(options.headers.apikey, "server-only-test-key");
+    if (target.endsWith("/functions/v1/qqcross-ai-neuron-quota")) {
+      assert.equal(options.headers.apikey, "sb_publishable_test");
+      assert.equal(options.headers.Authorization, "Bearer player-session-token");
+      assert.equal(options.headers.Origin, origin);
       const body = JSON.parse(options.body);
-      reserveCalls.push(body);
-      return Response.json([{
-        reservation_id: reservationId,
-        allowed: quotaAllowed,
-        neurons_used: quotaAllowed ? 100 : 10000,
-        neurons_reserved: quotaAllowed ? body.p_neurons : 0,
-        neurons_remaining: quotaAllowed ? 10000 - 100 - body.p_neurons : 0,
-        daily_limit: 10000,
-        resets_at: "2026-11-23T00:00:00Z"
-      }]);
-    }
-    if (target.endsWith("/rpc/settle_qqcross_ai_neurons")) {
-      const body = JSON.parse(options.body);
-      settleCalls.push(body);
-      return Response.json([{
-        settled: true,
-        charged_neurons: body.p_actual_neurons,
-        neurons_used: 100 + body.p_actual_neurons,
-        neurons_reserved: 0,
-        neurons_remaining: 9900 - body.p_actual_neurons,
-        daily_limit: 10000,
-        resets_at: "2026-11-23T00:00:00Z"
-      }]);
-    }
-    if (target.endsWith("/rpc/get_qqcross_ai_neuron_balance")) {
-      return Response.json([{
-        neurons_used: 250,
-        neurons_reserved: 0,
-        neurons_remaining: 9750,
-        daily_limit: 10000,
-        resets_at: "2026-11-23T00:00:00Z"
-      }]);
+      if (body.action === "reserve") {
+        reserveCalls.push(body);
+        if (!quotaAllowed) {
+          return Response.json({
+            error: "На сегодня личный лимит ИИ исчерпан.",
+            quota: { used: 10000, reserved: 0, remaining: 0, limit: 10000 }
+          }, { status: 429 });
+        }
+        return Response.json({
+          allowed: true,
+          reservationId,
+          quota: { used: 100, reserved: body.neurons, remaining: 10000 - 100 - body.neurons, limit: 10000 }
+        });
+      }
+      if (body.action === "settle") {
+        settleCalls.push(body);
+        return Response.json({
+          settled: true,
+          chargedNeurons: body.actualNeurons,
+          quota: { used: 100 + body.actualNeurons, reserved: 0, remaining: 9900 - body.actualNeurons, limit: 10000 }
+        });
+      }
+      if (body.action === "balance") {
+        return Response.json({
+          quota: { used: 250, reserved: 0, remaining: 9750, limit: 10000, resetsAt: "2026-11-23T00:00:00Z" }
+        });
+      }
+      throw new Error("Unexpected quota action: " + body.action);
     }
     if (target === "https://api.tavily.com/search") {
       searchCalls += 1;
@@ -122,10 +115,12 @@ try {
   const directData = await directResponse.json();
   assert.equal(directData.reply, "Привет. Чем могу помочь?");
   assert.equal(directData.quota.limit, 10000);
-  assert.equal(directData.quota.remaining, 9900 - settleCalls[0].p_actual_neurons);
-  assert.equal(reserveCalls[0].p_user_id, userId);
-  assert.equal(settleCalls[0].p_user_id, userId);
-  assert.ok(settleCalls[0].p_actual_neurons > 0);
+  assert.equal(directData.quota.remaining, 9900 - settleCalls[0].actualNeurons);
+  assert.equal(reserveCalls[0].action, "reserve");
+  assert.ok(reserveCalls[0].neurons > 0);
+  assert.equal(settleCalls[0].action, "settle");
+  assert.equal(settleCalls[0].reservationId, reservationId);
+  assert.ok(settleCalls[0].actualNeurons > 0);
 
   let modelCalls = 0;
   env.AI = {
