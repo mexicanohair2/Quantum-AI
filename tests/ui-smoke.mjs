@@ -74,6 +74,8 @@ try {
 
   await page.reload({ waitUntil: "networkidle" });
   assert.equal(await page.locator("#historyCount").textContent(), "1");
+  await page.locator("#menuBtn").click();
+  assert.equal(await page.locator("#sidebar").evaluate((node) => node.classList.contains("open")), true);
 
   page.once("dialog", (dialog) => dialog.accept());
   await page.locator('#chatHistory [data-action="delete"]').click();
