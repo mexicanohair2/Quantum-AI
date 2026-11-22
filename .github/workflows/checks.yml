@@ -41,6 +41,7 @@ jobs:
       - name: Install browser test runtime
         run: |
           npm init -y
+          npm pkg set type=module
           npm install --no-save --no-package-lock playwright
           npx playwright install --with-deps chromium
       - name: Run browser smoke test
@@ -52,5 +53,5 @@ jobs:
             if curl -fsS http://127.0.0.1:4173/ > /dev/null; then break; fi
             sleep 1
           done
-          node --experimental-default-type=module tests/assistant-tools.mjs
+          node tests/assistant-tools.mjs
           node tests/ui-smoke.mjs
