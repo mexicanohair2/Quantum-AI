@@ -5,11 +5,3 @@ workers_dev = true
 
 [ai]
 binding = "AI"
-
-[[durable_objects.bindings]]
-name = "DAILY_QUOTA"
-class_name = "DailyQuota"
-
-[[migrations]]
-tag = "v1"
-new_sqlite_classes = ["DailyQuota"]
