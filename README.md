@@ -28,7 +28,8 @@ https://mexicanohair2.github.io/Quantum-AI/
 - Server-side Worker implementation: prepared in `worker/index.mjs`.
 - Model tool-calling loop: implemented in source; the model can call `web_search`, receive results, and compose the final answer.
 - Per-player 10,000-neuron daily allowance: implemented in QQCross Supabase with atomic reservations and settlement.
-- Automated backend smoke tests: added.
+- Automated backend and browser smoke tests: passing in GitHub Actions on the feature branches.
+- The Qwen vision path has a separate 2,048-token completion budget and medium reasoning effort; its reservation calculation is covered by regression tests.
 - QQCross chat UI and Worker client integration are prepared on feature branches.
 - **Live inference is not yet deployed.** The Worker endpoint is configured in the QQCross UI but will remain unavailable until the separate Worker is deployed after billing checks.
 
@@ -53,7 +54,7 @@ The connected Cloudflare OAuth session cannot read Billing Profile or subscripti
 - Browser history persistence: implemented.
 - Worker backend source and automated tests: implemented in repository.
 - Supabase quota Edge Function: deployed with JWT verification. Cloudflare Worker deployment and QQCross UI connection: pending Billing Read verification.
-- QQCross encyclopedia replacement UI: implemented on branch `feature/quantum-ai-chat`; PR and browser checks pending.
-- Quantum-AI text/image routing: implemented on branch `feature/qqcross-chat-vision`; CI checks pending.
+- QQCross encyclopedia replacement UI: implemented on branch `feature/quantum-ai-chat`; PR #110 is draft and its mobile/desktop browser checks passed.
+- Quantum-AI text/image routing: implemented on branch `feature/qqcross-chat-vision`; PR #1 is draft and its backend/browser CI passed.
 - Cloudflare Worker deployment and end-to-end live inference: blocked pending Billing Read verification and explicit cost approval.
 - Real Android-device testing: pending.
