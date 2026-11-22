@@ -55,6 +55,6 @@ The connected Cloudflare OAuth session cannot read Billing Profile or subscripti
 - Worker backend source and automated tests: implemented in repository.
 - Supabase quota Edge Function: deployed with JWT verification. Cloudflare Worker deployment and QQCross UI connection: pending Billing Read verification.
 - QQCross encyclopedia replacement UI: implemented on branch `feature/quantum-ai-chat`; PR #110 is draft and its mobile/desktop browser checks passed.
-- Qwen-only Quantum-AI backend (text, image, web-search tool cycle): implemented on branch `feature/qwen-single-model`; PR #3 is draft and GitHub Actions run #99 passed syntax, static, backend, and browser smoke checks.
+- Qwen-only Quantum-AI backend (text, image, web-search tool cycle): implemented on branch `feature/qwen-single-model`; PR #3 is draft and GitHub Actions run #100 passed syntax, static, backend, and browser smoke checks.
 - Cloudflare Worker deployment and end-to-end live inference: blocked because the connected OAuth session returns 403 for Billing Profile, usage, and subscriptions; the account plan and remaining account-wide allowance cannot be verified. No Worker has been deployed and no live model call has been made.
 - Real Android-device testing: pending.
