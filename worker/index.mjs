@@ -1,18 +1,15 @@
-const MODEL = "@cf/zai-org/glm-4.7-flash";
-const VISION_MODEL = "@cf/qwen/qwen3.8-27b";
+const MODEL = "@cf/qwen/qwen3.8-27b";
 const ALLOWED_ORIGIN = "https://mexicanohair2.github.io";
 const MAX_BODY_CHARS = 2_000_000;
 const MAX_IMAGE_DATA_URL_CHARS = 1_400_000;
 const MAX_HISTORY_MESSAGES = 8;
 const MAX_HISTORY_CHARS = 9000;
 const MAX_MESSAGE_CHARS = 1800;
-const MAX_COMPLETION_TOKENS = 512;
-const VISION_MAX_COMPLETION_TOKENS = 2048;
+const MAX_COMPLETION_TOKENS = 2048;
 const DAILY_NEURON_LIMIT = 10000;
-const INPUT_NEURONS_PER_MILLION = 5500;
-const OUTPUT_NEURONS_PER_MILLION = 36400;
-const VISION_INPUT_NEURONS_PER_MILLION = 40909;
-const VISION_OUTPUT_NEURONS_PER_MILLION = 290909;
+// Cloudflare's published Qwen 3.8 27B Neuron rates.
+const INPUT_NEURONS_PER_MILLION = 40909;
+const OUTPUT_NEURONS_PER_MILLION = 290909;
 const IMAGE_RESERVATION_TOKENS = 32000;
 
 const SYSTEM_PROMPT = [
@@ -221,33 +218,25 @@ export function normalizeMessages(input) {
   return normalized;
 }
 
-function completionTokenBudget(model = MODEL) {
-  return model === VISION_MODEL ? VISION_MAX_COMPLETION_TOKENS : MAX_COMPLETION_TOKENS;
-}
-
-function estimateModelNeurons(messages, outputCharacters = 0, model = MODEL, extraInputTokens = 0) {
+function estimateModelNeurons(messages, outputCharacters = 0, extraInputTokens = 0) {
   const inputCharacters = SYSTEM_PROMPT.length +
     messages.reduce((sum, item) => sum + String(item.content || "").length, 0);
-  // Cloudflare's published model-specific Neuron rates; usage metadata is preferred at settlement.
-  const inputRate = model === VISION_MODEL ? VISION_INPUT_NEURONS_PER_MILLION : INPUT_NEURONS_PER_MILLION;
-  const outputRate = model === VISION_MODEL ? VISION_OUTPUT_NEURONS_PER_MILLION : OUTPUT_NEURONS_PER_MILLION;
+  // Estimate with Qwen's published input/output Neuron rates; use returned usage metadata when available.
   const inputTokens = Math.ceil(inputCharacters * 1.2) + extraInputTokens;
-  const outputTokens = Math.min(completionTokenBudget(model), Math.ceil(outputCharacters * 1.2));
+  const outputTokens = Math.min(MAX_COMPLETION_TOKENS, Math.ceil(outputCharacters * 1.2));
   return Math.max(1, Math.ceil(
-    inputTokens * inputRate / 1_000_000 +
-    outputTokens * outputRate / 1_000_000
+    inputTokens * INPUT_NEURONS_PER_MILLION / 1_000_000 +
+    outputTokens * OUTPUT_NEURONS_PER_MILLION / 1_000_000
   ));
 }
 
 export function estimateReservation(messages, hasImage = false) {
-  // Reserve for both the initial model call and a possible second call after web search.
-  const model = hasImage ? VISION_MODEL : MODEL;
+  // Reserve for two Qwen calls: the initial response and one possible web-search synthesis.
   const imageTokens = hasImage ? IMAGE_RESERVATION_TOKENS : 0;
-  const outputBudget = completionTokenBudget(model);
-  const firstCall = estimateModelNeurons(messages, outputBudget, model, imageTokens);
+  const firstCall = estimateModelNeurons(messages, MAX_COMPLETION_TOKENS, imageTokens);
   const secondCall = estimateModelNeurons(messages.concat([
     { role: "tool", content: "x".repeat(3200) }
-  ]), outputBudget, model, imageTokens);
+  ]), MAX_COMPLETION_TOKENS, imageTokens);
   return Math.min(DAILY_NEURON_LIMIT, Math.max(1, firstCall + secondCall));
 }
 
@@ -259,20 +248,18 @@ function resultTextForUsage(result) {
   return "";
 }
 
-function actualNeurons(result, messages, model = MODEL, extraInputTokens = 0) {
+function actualNeurons(result, messages, extraInputTokens = 0) {
   const usage = result?.usage || result?.result?.usage || {};
   const inputTokens = Number(usage.prompt_tokens ?? usage.input_tokens);
   const outputTokens = Number(usage.completion_tokens ?? usage.output_tokens);
-  const inputRate = model === VISION_MODEL ? VISION_INPUT_NEURONS_PER_MILLION : INPUT_NEURONS_PER_MILLION;
-  const outputRate = model === VISION_MODEL ? VISION_OUTPUT_NEURONS_PER_MILLION : OUTPUT_NEURONS_PER_MILLION;
   if (Number.isFinite(inputTokens) && inputTokens >= 0 &&
       Number.isFinite(outputTokens) && outputTokens >= 0) {
     return Math.max(1, Math.ceil(
-      inputTokens * inputRate / 1_000_000 +
-      outputTokens * outputRate / 1_000_000
+      inputTokens * INPUT_NEURONS_PER_MILLION / 1_000_000 +
+      outputTokens * OUTPUT_NEURONS_PER_MILLION / 1_000_000
     ));
   }
-  return estimateModelNeurons(messages, resultTextForUsage(result).length, model, extraInputTokens);
+  return estimateModelNeurons(messages, resultTextForUsage(result).length, extraInputTokens);
 }
 
 async function searchWeb(query, topic = "general") {
@@ -341,21 +328,19 @@ function responseText(result) {
   return "";
 }
 
-async function runModel(env, messages, allowSearch, model = MODEL, extraInputTokens = 0) {
+async function runModel(env, messages, allowSearch, extraInputTokens = 0) {
   const options = {
     messages,
-    max_completion_tokens: completionTokenBudget(model),
-    temperature: model === VISION_MODEL ? 1.0 : 0.35
+    max_completion_tokens: MAX_COMPLETION_TOKENS,
+    temperature: 1.0,
+    reasoning_effort: "medium"
   };
-  if (model === VISION_MODEL) {
-    options.reasoning_effort = "medium";
-  }
   if (allowSearch) {
     options.tools = [SEARCH_TOOL];
     options.tool_choice = "auto";
   }
-  const result = await env.AI.run(model, options);
-  return { result, neurons: actualNeurons(result, messages, model, extraInputTokens) };
+  const result = await env.AI.run(MODEL, options);
+  return { result, neurons: actualNeurons(result, messages, extraInputTokens) };
 }
 
 export async function handleChat(request, env, user) {
@@ -391,7 +376,6 @@ export async function handleChat(request, env, user) {
     }
   }
   const messages = normalizeMessages(incomingMessages);
-  const model = imageDataUrl ? VISION_MODEL : MODEL;
   const imageTokens = imageDataUrl ? IMAGE_RESERVATION_TOKENS : 0;
   const modelMessages = [{ role: "system", content: SYSTEM_PROMPT }, ...messages];
   if (imageDataUrl) {
@@ -407,7 +391,7 @@ export async function handleChat(request, env, user) {
   let operationError = null;
 
   try {
-    const firstCall = await runModel(env, modelMessages, true, model, imageTokens);
+    const firstCall = await runModel(env, modelMessages, true, imageTokens);
     actual += firstCall.neurons;
     const first = firstCall.result;
     const toolCalls = Array.isArray(first?.tool_calls) ? first.tool_calls : [];
@@ -415,7 +399,7 @@ export async function handleChat(request, env, user) {
     if (!toolCalls.length) {
       const reply = responseText(first);
       if (!reply) throw new HttpError(502, "Модель не вернула ответ. Попробуй ещё раз.");
-      responseBody = { reply, sources: [], model };
+      responseBody = { reply, sources: [], model: MODEL };
     } else {
       if (toolCalls.length !== 1) {
         throw new HttpError(502, "Модель запросила слишком много инструментов за один ответ.");
@@ -447,12 +431,12 @@ export async function handleChat(request, env, user) {
           content: JSON.stringify(search)
         }
       ];
-      const finalCall = await runModel(env, toolMessages, false, model, imageTokens);
+      const finalCall = await runModel(env, toolMessages, false, imageTokens);
       actual += finalCall.neurons;
       const reply = responseText(finalCall.result);
       if (!reply) throw new HttpError(502, "Модель не смогла подготовить итоговый ответ.");
       const sources = search.results.map(({ title, url, publishedDate }) => ({ title, url, publishedDate }));
-      responseBody = { reply, sources, model };
+      responseBody = { reply, sources, model: MODEL };
     }
   } catch (error) {
     operationError = error;
