@@ -52,8 +52,8 @@ assert.ok(backend.includes("Не помогай обходить возраст�
 assert.ok(backend.includes("IMAGE_RESERVATION_TOKENS"));
 assert.ok(backend.includes("MAX_IMAGE_DATA_URL_CHARS"));
 assert.ok(backend.includes("IMAGE_RESERVATION_TOKENS"));
-assert.ok(backend.includes("actualNeurons(result, messages, model = MODEL, extraInputTokens = 0)"));
-assert.ok(backend.includes("resultTextForUsage(result).length, model, extraInputTokens"));
+assert.ok(backend.includes("actualNeurons(result, messages, extraInputTokens = 0)"));
+assert.ok(backend.includes("resultTextForUsage(result).length, extraInputTokens"));
 assert.ok(backend.includes("actualNeurons(result, messages, extraInputTokens = 0)"));
 assert.ok(backend.includes("tool_choice = \"auto\""));
 assert.ok(backend.includes("authenticatePlayer"));
