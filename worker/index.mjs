@@ -6,6 +6,7 @@ const MAX_HISTORY_MESSAGES = 8;
 const MAX_HISTORY_CHARS = 9000;
 const MAX_MESSAGE_CHARS = 1800;
 const MAX_COMPLETION_TOKENS = 2048;
+const DEFAULT_MODEL_TIMEOUT_MS = 30000;
 const DAILY_NEURON_LIMIT = 10000;
 // Cloudflare's published Qwen 3.8 27B Neuron rates.
 const INPUT_NEURONS_PER_MILLION = 40909;
@@ -169,12 +170,23 @@ async function reservePlayerNeurons(request, env, amount) {
 }
 
 async function settlePlayerNeurons(request, env, reservationId, actual) {
-  const result = await quotaFunctionRequest(request, env, "settle", {
+  const payload = {
     reservationId,
     actualNeurons: Math.max(0, Math.ceil(actual))
-  });
-  if (!result?.settled) throw new HttpError(503, "Не удалось сохранить расход нейронов.");
-  return quotaView(result.quota);
+  };
+  let lastError;
+  // Settlement is idempotent in the database, so retry one transient failure safely.
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const result = await quotaFunctionRequest(request, env, "settle", payload);
+      if (!result?.settled) throw new HttpError(503, "Не удалось сохранить расход нейронов.");
+      return quotaView(result.quota);
+    } catch (error) {
+      lastError = error;
+      if (attempt === 1 || (error instanceof HttpError && error.status !== 503)) throw error;
+    }
+  }
+  throw lastError || new HttpError(503, "Не удалось сохранить расход нейронов.");
 }
 
 async function getPlayerNeurons(request, env) {
@@ -339,8 +351,33 @@ async function runModel(env, messages, allowSearch, extraInputTokens = 0) {
     options.tools = [SEARCH_TOOL];
     options.tool_choice = "auto";
   }
-  const result = await env.AI.run(MODEL, options);
-  return { result, neurons: actualNeurons(result, messages, extraInputTokens) };
+
+  const configuredTimeout = Number(env.AI_TIMEOUT_MS);
+  const timeoutMs = Number.isInteger(configuredTimeout) && configuredTimeout >= 1000 && configuredTimeout <= 45000
+    ? configuredTimeout
+    : DEFAULT_MODEL_TIMEOUT_MS;
+  let timeoutId;
+  try {
+    const timeout = new Promise((_, reject) => {
+      timeoutId = setTimeout(() => reject(new HttpError(
+        504,
+        "Модель не ответила за " + Math.ceil(timeoutMs / 1000) + " сек. Нейроны за неудачный запрос не списаны."
+      )), timeoutMs);
+    });
+    // Fail fast instead of leaving a request waiting in a model-capacity queue.
+    const inference = env.AI.run(MODEL, options, { rejectIfBusy: true });
+    const result = await Promise.race([inference, timeout]);
+    return { result, neurons: actualNeurons(result, messages, extraInputTokens) };
+  } catch (error) {
+    if (error instanceof HttpError) throw error;
+    const detail = String(error?.message || error || "");
+    if (/busy|capacity|overload|rate.?limit/i.test(detail)) {
+      throw new HttpError(503, "Модель временно перегружена. Нейроны за неудачный запрос не списаны.");
+    }
+    throw new HttpError(502, "Модель не смогла обработать запрос. Нейроны за неудачный запрос не списаны.");
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 export async function handleChat(request, env, user) {
@@ -454,7 +491,8 @@ export async function handleChat(request, env, user) {
     operationError = error;
   }
 
-  const quota = await settlePlayerNeurons(request, env, reservation.id, actual);
+  // A failed or timed-out turn is refunded in full. Charge only after a complete reply exists.
+  const quota = await settlePlayerNeurons(request, env, reservation.id, operationError ? 0 : actual);
   if (operationError) throw operationError;
   return { ...responseBody, quota };
 }

@@ -27,6 +27,7 @@ function makeRequest(messages, options = {}) {
 const env = {
   SUPABASE_URL: "https://qqcross.supabase.co",
   SUPABASE_PUBLISHABLE_KEY: "sb_publishable_test",
+  AI_TIMEOUT_MS: 1000,
   AI: {
     async run(model, options) {
       assert.equal(model, "@cf/qwen/qwen3.8-27b");
@@ -232,6 +233,25 @@ try {
   assert.equal(imageData.reply, "На изображении виден объект.");
   assert.equal(imageData.model, "@cf/qwen/qwen3.8-27b");
   assert.ok(settleCalls.at(-1).actualNeurons >= 1300, "image inference without usage metadata must include reserved image tokens");
+
+  // A model call that never resolves must time out, return a visible error, and refund the reservation.
+  env.AI = {
+    async run(model, options, runOptions) {
+      assert.equal(model, "@cf/qwen/qwen3.8-27b");
+      assert.deepEqual(runOptions, { rejectIfBusy: true });
+      return new Promise(() => {});
+    }
+  };
+  const beforeTimeoutSettle = settleCalls.length;
+  const timeoutResponse = await worker.fetch(
+    makeRequest([{ role: "user", content: "Напиши сочинение на тему как я провёл лето." }]),
+    env
+  );
+  assert.equal(timeoutResponse.status, 504);
+  const timeoutData = await timeoutResponse.json();
+  assert.match(timeoutData.error, /не ответила/i);
+  assert.equal(settleCalls.length, beforeTimeoutSettle + 1);
+  assert.equal(settleCalls.at(-1).actualNeurons, 0, "failed inference must refund the full reservation");
 
   const invalidImageResponse = await worker.fetch(
     makeRequest([{ role: "user", content: "Проверь фото" }], { imageDataUrl: "data:image/svg+xml;base64,PHN2Zz4=" }),
