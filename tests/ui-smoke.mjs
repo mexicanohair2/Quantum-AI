@@ -97,6 +97,11 @@ try {
   await page.locator("#prompt").fill("Сколько будет 2 + 2?");
   assert.equal(await page.locator("#sendBtn").isDisabled(), false);
   await page.locator("#sendBtn").click();
+  await page.evaluate(() => {
+    const form = document.querySelector("#messageForm");
+    form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+  });
   await page.locator("#threadMessages .message.assistant").waitFor({ state: "visible" });
   assert.match(await page.locator("#threadMessages").innerText(), /2 \+ 2 = 4/);
   assert.match(await page.locator("#authStatus").innerText(), /9\s?700 нейронов/);
