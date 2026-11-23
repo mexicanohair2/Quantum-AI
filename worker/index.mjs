@@ -344,8 +344,9 @@ async function runModel(env, messages, allowSearch, extraInputTokens = 0) {
   const options = {
     messages,
     max_completion_tokens: MAX_COMPLETION_TOKENS,
-    temperature: 1.0,
-    reasoning_effort: "medium"
+    temperature: 0.7,
+    // Qwen 3.8 otherwise spends the completion budget on hidden reasoning and may return no answer.
+    chat_template_kwargs: { enable_thinking: false }
   };
   if (allowSearch) {
     options.tools = [SEARCH_TOOL];
