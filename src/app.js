@@ -2,9 +2,7 @@ const $ = (id) => document.getElementById(id);
 const API = "https://quantum-ai-chat-api.qq-ai-cloud.workers.dev";
 const SUPABASE_URL = "https://lzpkronttfzbubbfggsb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_2PD3wYGG1aYoxRqhyM8wMA_OIQrwm3k";
-const QQCROSS_URL = "https://mexicanohair2.github.io/QQCross/";
 const STORE_KEY_PREFIX = "quantum-ai-workspace-v1:";
-const LEGACY_KEY = "quantum-ai-chat-v2";
 const MAX_CHATS = 80;
 const MAX_MESSAGES = 120;
 const MAX_REQUEST_MESSAGES = 8;
@@ -55,17 +53,6 @@ function loadWorkspace() {
     }
   } catch (_) {}
 
-  // Import the previous local history into the first authenticated workspace only.
-  try {
-    const legacy = JSON.parse(localStorage.getItem(LEGACY_KEY) || "[]");
-    const messages = cleanMessages(legacy);
-    if (messages.length) {
-      const now = Date.now();
-      const firstUser = messages.find((message) => message.role === "user");
-      const chat = { id: makeId(), title: titleFromText(firstUser?.content || "Импортированный чат"), createdAt: now, updatedAt: now, messages };
-      return { conversations: [chat], activeId: chat.id, ready: false, busy: false, quota: null };
-    }
-  } catch (_) {}
   return emptyWorkspace();
 }
 
@@ -255,12 +242,7 @@ async function apiRequest(path, options = {}) {
 
 async function refreshQuota() {
   const data = await apiRequest("/api/balance");
-  state.quota = data.quota || null;
-  const node = $("authStatus");
-  if (node && state.quota) {
-    node.textContent = Number(state.quota.remaining).toLocaleString("ru-RU") + " нейронов";
-    node.dataset.state = "ready";
-  }
+  return data.quota || null;
 }
 
 async function applySession(session) {
@@ -299,8 +281,9 @@ async function applySession(session) {
   try {
     const health = await fetch(API + "/health", { cache: "no-store" });
     if (!health.ok) throw new Error("Worker недоступен.");
-    await refreshQuota();
+    const quota = await refreshQuota();
     if (sequence !== authSequence) return;
+    state.quota = quota;
     state.ready = true;
     setAuthStatus(Number(state.quota?.remaining ?? 0).toLocaleString("ru-RU") + " нейронов", "ready");
     clearError();
@@ -338,6 +321,13 @@ async function initializeAuth() {
     // Avoid awaiting network work inside Supabase's auth event callback.
     Promise.resolve().then(() => applySession(session));
   });
+  window.addEventListener("online", async () => {
+    if (!authClient) return;
+    try {
+      const result = await authClient.auth.getSession();
+      if (!result.error) await applySession(result.data?.session || null);
+    } catch (_) {}
+  });
 }
 
 function resizePrompt() {
@@ -352,6 +342,7 @@ async function sendMessage() {
   const text = input.value.trim();
   if (!text || !state.ready || state.busy) return;
 
+  const requestUserId = currentUserId;
   state.busy = true;
   updateComposer();
   clearError();
@@ -370,6 +361,7 @@ async function sendMessage() {
       method: "POST",
       body: JSON.stringify({ messages: chat.messages.slice(-MAX_REQUEST_MESSAGES).map(({ role, content }) => ({ role, content })) })
     });
+    if (currentUserId !== requestUserId) return;
     if (typeof result.reply !== "string" || !result.reply.trim()) throw new Error("Модель вернула пустой ответ.");
     chat.messages.push({
       role: "assistant",
@@ -382,14 +374,19 @@ async function sendMessage() {
     renderCurrentChat();
     if (state.quota) setAuthStatus(Number(state.quota.remaining).toLocaleString("ru-RU") + " нейронов", "ready");
   } catch (error) {
+    if (currentUserId !== requestUserId) return;
     chat.messages = chat.messages.filter((message) => message !== userMessage);
-    showError(error instanceof Error ? error.message : "Не удалось получить ответ.");
+    saveWorkspace();
+    const message = error instanceof Error ? error.message : "Не удалось получить ответ.";
+    showError(message, /сессия|войд|аккаунт/i.test(message));
     input.value = text;
     renderCurrentChat();
   } finally {
-    state.busy = false;
-    resizePrompt();
-    updateComposer();
+    if (currentUserId === requestUserId) {
+      state.busy = false;
+      resizePrompt();
+      updateComposer();
+    }
   }
 }
 
