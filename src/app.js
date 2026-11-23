@@ -384,6 +384,13 @@ async function sendMessage() {
     showError(message, /сессия|войд|аккаунт/i.test(message));
     input.value = text;
     renderCurrentChat();
+    // Refresh the visible balance after a failed turn so released reservations are reflected.
+    try {
+      const latestQuota = await refreshQuota();
+      if (currentUserId !== requestUserId) return;
+      state.quota = latestQuota;
+      setAuthStatus(Number(latestQuota?.remaining ?? 0).toLocaleString("ru-RU") + " нейронов", "ready");
+    } catch (_) {}
   } finally {
     if (currentUserId === requestUserId) {
       state.busy = false;
