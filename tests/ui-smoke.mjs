@@ -7,7 +7,7 @@ let chatRequests = 0;
 let failNextChat = false;
 
 await context.addInitScript(() => {
-  const session = localStorage.getItem("quantum-ui-test-auth") === "yes" ? {
+  let session = localStorage.getItem("quantum-ui-test-auth") === "yes" ? {
     access_token: "mock-qqcross-access-token",
     user: {
       id: "8b90b6c7-1e36-4fd5-8a6c-123456789012",
@@ -16,12 +16,17 @@ await context.addInitScript(() => {
       is_anonymous: false
     }
   } : null;
+  window.__setQuantumSession = (next) => {
+    session = next;
+    window.__quantumAuthCallback?.(next ? "SIGNED_IN" : "SIGNED_OUT", next);
+  };
   window.supabase = {
     createClient() {
       return {
         auth: {
           async getSession() { return { data: { session }, error: null }; },
           onAuthStateChange(callback) {
+            window.__quantumAuthSubscribed = true;
             window.__quantumAuthCallback = callback;
             return { data: { subscription: { unsubscribe() {} } } };
           }
@@ -46,6 +51,7 @@ await page.route("https://quantum-ai-chat-api.qq-ai-cloud.workers.dev/**", async
   }
   assert.equal(request.headers()["authorization"], "Bearer mock-qqcross-access-token");
   if (url.pathname === "/api/balance") {
+    assert.equal(await page.evaluate(() => window.__quantumAuthSubscribed), true, "auth listener must be installed before first balance request");
     await route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -125,7 +131,40 @@ try {
   await page.waitForFunction(() => document.querySelector("#authStatus")?.dataset.state === "ready");
   assert.equal(await page.locator("#chatHistory .history-item").count(), 1);
   assert.match(await page.locator("#threadMessages").innerText(), /2 \+ 2 = 4/);
-  console.log("Quantum-AI shared-auth and mobile chat browser smoke tests passed.");
+
+  // A sign-out must lock the composer immediately and clear the active user's view.
+  await page.evaluate(() => window.__setQuantumSession(null));
+  await page.waitForFunction(() => document.querySelector("#prompt")?.disabled === true);
+  assert.equal(await page.locator("#loginLink").isVisible(), true);
+
+  // Switching accounts must not expose the previous account's local chat history.
+  await page.evaluate(() => window.__setQuantumSession({
+    access_token: "mock-qqcross-access-token",
+    user: {
+      id: "9c91c7d8-2f47-5e6a-9b7d-234567890123",
+      email: "second-player@example.com",
+      email_confirmed_at: "2026-11-22T00:00:00Z",
+      is_anonymous: false
+    }
+  }));
+  await page.waitForFunction(() => document.querySelector("#authStatus")?.dataset.state === "ready");
+  assert.equal(await page.locator("#chatHistory .history-item").count(), 0);
+  assert.equal(await page.locator("#threadMessages").innerText(), "");
+
+  // Returning to the original account restores only its own history.
+  await page.evaluate(() => window.__setQuantumSession({
+    access_token: "mock-qqcross-access-token",
+    user: {
+      id: "8b90b6c7-1e36-4fd5-8a6c-123456789012",
+      email: "player@example.com",
+      email_confirmed_at: "2026-11-22T00:00:00Z",
+      is_anonymous: false
+    }
+  }));
+  await page.waitForFunction(() => document.querySelector("#authStatus")?.dataset.state === "ready");
+  assert.equal(await page.locator("#chatHistory .history-item").count(), 1);
+  assert.match(await page.locator("#threadMessages").innerText(), /2 \+ 2 = 4/);
+  console.log("Quantum-AI shared-auth, account-switch isolation, and mobile chat browser smoke tests passed.");
 } finally {
   await browser.close();
 }
