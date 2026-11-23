@@ -32,7 +32,7 @@ const env = {
     async run(model, options) {
       assert.equal(model, "@cf/qwen/qwen3.8-27b");
       assert.equal(options.max_completion_tokens, 2048);
-      assert.equal(options.reasoning_effort, "medium");
+      assert.deepEqual(options.chat_template_kwargs, { enable_thinking: false });
       assert.equal(options.tool_choice, "auto");
       assert.equal(options.tools[0].name, "web_search");
       return {
@@ -136,7 +136,7 @@ try {
       modelCalls += 1;
       assert.equal(model, "@cf/qwen/qwen3.8-27b", "tool-calling turns must use Qwen");
       assert.equal(options.max_completion_tokens, 2048);
-      assert.equal(options.reasoning_effort, "medium");
+      assert.deepEqual(options.chat_template_kwargs, { enable_thinking: false });
       if (modelCalls === 1) {
         assert.equal(options.tools.length, 1);
         return {
@@ -214,7 +214,7 @@ try {
     async run(model, options) {
       assert.equal(model, "@cf/qwen/qwen3.8-27b");
       assert.equal(options.max_completion_tokens, 2048);
-      assert.equal(options.reasoning_effort, "medium");
+      assert.deepEqual(options.chat_template_kwargs, { enable_thinking: false });
       const userMessage = options.messages.find((message) => message.role === "user");
       assert.ok(Array.isArray(userMessage.content));
       assert.equal(userMessage.content[1].type, "image_url");
@@ -252,6 +252,30 @@ try {
   assert.match(timeoutData.error, /не ответила/i);
   assert.equal(settleCalls.length, beforeTimeoutSettle + 1);
   assert.equal(settleCalls.at(-1).actualNeurons, 0, "failed inference must refund the full reservation");
+
+  // Qwen can exhaust the completion budget on hidden reasoning and return no user-facing content.
+  // The Worker must not expose reasoning; it must return a clear error and refund the reservation.
+  env.AI = {
+    async run(model, options, runOptions) {
+      assert.equal(model, "@cf/qwen/qwen3.8-27b");
+      assert.deepEqual(options.chat_template_kwargs, { enable_thinking: false });
+      return {
+        choices: [{ message: { role: "assistant", content: null, reasoning: "internal reasoning must never be shown" }, finish_reason: "length" }],
+        usage: { prompt_tokens: 120, completion_tokens: 2048 }
+      };
+    }
+  };
+  const beforeEmptyAnswerSettle = settleCalls.length;
+  const emptyAnswerResponse = await worker.fetch(
+    makeRequest([{ role: "user", content: "Напиши сочинение о лете." }]),
+    env
+  );
+  assert.equal(emptyAnswerResponse.status, 502);
+  const emptyAnswerData = await emptyAnswerResponse.json();
+  assert.match(emptyAnswerData.error, /не вернула ответ/i);
+  assert.equal(settleCalls.length, beforeEmptyAnswerSettle + 1);
+  assert.equal(settleCalls.at(-1).actualNeurons, 0, "reasoning-only output must be refunded");
+  assert.doesNotMatch(JSON.stringify(emptyAnswerData), /internal reasoning/);
 
   const invalidImageResponse = await worker.fetch(
     makeRequest([{ role: "user", content: "Проверь фото" }], { imageDataUrl: "data:image/svg+xml;base64,PHN2Zz4=" }),
