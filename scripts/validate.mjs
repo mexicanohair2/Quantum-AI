@@ -20,6 +20,7 @@ assert.ok(html.includes("src/app.js?v=20261123-shared-auth-v1"));
 assert.ok(html.includes("supabase-js@2"));
 assert.ok(html.includes("authStatus"));
 assert.ok(html.includes("loginLink"));
+assert.ok(html.includes('href="https://mexicanohair2.github.io/QQcross/"'));
 for(const unwanted of ["clearBtn","exportBtn","service-status","chatNotice","composer-hint","suggestion-grid","viewKicker","searchView","webSearchNav"]) assert.ok(!html.includes(unwanted),`Unexpected UI element: ${unwanted}`);
 assert.ok(/disabled/.test(html.match(/<textarea[\s\S]*?>/)?.[0]||""));
 assert.ok(!/Qwen|quantum-engine|loadLocalModel|Загрузить модель|скачать модель/i.test(html+app));
