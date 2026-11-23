@@ -313,14 +313,17 @@ async function initializeAuth() {
     }
   });
 
-  const { data, error } = await authClient.auth.getSession();
-  if (error) throw error;
-  await applySession(data?.session || null);
-
-  authClient.auth.onAuthStateChange((_event, session) => {
+  // Subscribe before the initial read so sign-out/account-switch events cannot be missed
+  // while the first health and balance requests are in flight.
+  authClient.auth.onAuthStateChange((event, session) => {
+    if (event === "INITIAL_SESSION") return;
     // Avoid awaiting network work inside Supabase's auth event callback.
     Promise.resolve().then(() => applySession(session));
   });
+
+  const { data, error } = await authClient.auth.getSession();
+  if (error) throw error;
+  await applySession(data?.session || null);
   window.addEventListener("online", async () => {
     if (!authClient) return;
     try {
